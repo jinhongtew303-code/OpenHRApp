@@ -49,6 +49,26 @@
 - 网页版和 APK 连同一个 Supabase 数据库，数据互通。
 - 同一套 APK，按登录角色显示不同内容：员工端不显示轨迹，老板端显示。
 
+## 线上地址
+- 网页版（Vercel）：https://open-hr-app-seven.vercel.app
+- Supabase 项目：gfotntnjyotoytnzilvb（新加坡）
+- GitHub fork：github.com/jinhongtew303-code/OpenHRApp
+
+## APK 更新方式（已确认 2026-11-19）
+- APK 用 Capacitor 做成「薄壳」，内部直接加载线上网址（Vercel）。
+- 所以：改代码 → push 到 Vercel → 员工下次打开 App 就是最新版，**不用重新下载 APK**。保持“无限次改”的习惯。
+- 只有改动原生能力（定位权限、相机、后台定位、App 图标/名字、加插件）时才需要重新打包发新 APK。
+- 代价：App 需要联网才能用（本来就要连 Supabase，无影响）。
+
+## 员工端手机界面（设计图 2026-11-19，4 个底部标签）
+员工手机上只能看到这 4 个标签，其他一律隐藏：
+1. **Home**：Clock In 按钮、打卡自拍证明 + 时间、Location tracking（GPS 状态 + 地点 + 小地图）、Workday Timeline（今日：上班/午休开始/午休结束/下班）、Start Break 按钮、Today 汇总（工作时长 / 准时 / 加班）。
+2. **My Attendance**：月历视图，标记 Worked/MC/Emergency/Rest day/Public holiday + 下方统计。
+   - ⚠️ 冲突待确认：需求 1B 说员工只看今天、不看过去。但这张设计图是整月历史。二选一：(a) 员工只看今天（符合 1B）；(b) 保留整月历史但不显示加班。请最终拍板。
+3. **Leave**：Apply Leave 表单（类型、起止日期、原因、提交）。
+4. **My Profile**：外观模式、个人资料（只读为主）、改密码。
+- 设计图是视觉参考，具体用现有组件实现，颜色/排版尽量靠近但不强求像素级一致。
+
 ## 需求变更记录
 - 2026-11-19：建立本文件（初始需求）。
 - 2026-11-19：员工端要极简。打开 App → 很快拍一张自拍 → 已上班；下班同样拍照打卡。
