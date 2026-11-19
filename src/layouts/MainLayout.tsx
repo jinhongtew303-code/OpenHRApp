@@ -5,16 +5,25 @@ import NotificationBell from '../components/notifications/NotificationBell';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { SubscriptionBanner } from '../components/subscription';
+import ViewAsControls from '../components/viewas/ViewAsControls';
+import { User } from '../types';
 
 
 interface MainLayoutProps {
   children: React.ReactNode;
   currentPath: string;
   onNavigate: (path: string) => void;
+  /** The employee currently being viewed (boss "view as"), or null. */
+  viewingAs?: User | null;
+  onEnterViewAs?: (emp: User) => void;
+  onExitViewAs?: () => void;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNavigate }) => {
-  const { user, logout } = useAuth();
+const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNavigate, viewingAs = null, onEnterViewAs, onExitViewAs }) => {
+  const { user: realUser, logout } = useAuth();
+  // While the boss is "viewing as" an employee, the whole shell (sidebar,
+  // menus, avatar) reflects that employee so it matches exactly what they see.
+  const user = viewingAs ?? realUser;
   const { darkMode, setDarkModePreference } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -87,6 +96,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
               >
                 {darkMode ? <Sun size={20} /> : <Moon size={20} />}
               </button>
+              {realUser && onEnterViewAs && onExitViewAs && (
+                <ViewAsControls
+                  mode="picker"
+                  realUser={realUser}
+                  viewingAs={viewingAs}
+                  onEnter={onEnterViewAs}
+                  onExit={onExitViewAs}
+                />
+              )}
               <NotificationBell onNavigate={handleNavigate} />
               <div
                 className="cursor-pointer flex-shrink-0"
@@ -102,6 +120,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
               </div>
            </div>
         </header>
+
+        {/* View-as-employee banner (boss only, while impersonating) */}
+        {realUser && onEnterViewAs && onExitViewAs && (
+          <ViewAsControls
+            mode="banner"
+            realUser={realUser}
+            viewingAs={viewingAs}
+            onEnter={onEnterViewAs}
+            onExit={onExitViewAs}
+          />
+        )}
 
         {/* Subscription Banner - visible to all org users */}
         <SubscriptionBanner onUpgradeClick={() => handleNavigate('upgrade')} userRole={user.role} onExitDemo={handleLogout} />

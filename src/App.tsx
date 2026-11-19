@@ -16,6 +16,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { lazyWithReload } from './utils/lazyWithReload';
 import { supabase } from './services/supabase';
 import { sessionManager } from './services/session/sessionManager';
+import { User } from './types';
 
 // Eager: the two pages most launches show first.
 import Login from './pages/Login';
@@ -122,6 +123,17 @@ const AppContent: React.FC = () => {
   const { subscription, isLoading: isSubscriptionLoading } = useSubscription();
   const [currentPath, setCurrentPath] = useState('dashboard');
   const [navParams, setNavParams] = useState<any>(null);
+
+  // Boss "view as employee": the employee being viewed, or null for the boss's
+  // own view. Purely a front-end view switch — the real session is untouched.
+  const [viewAsUser, setViewAsUser] = useState<User | null>(null);
+  // Only ADMIN/HR may impersonate; ignore a stale value if the real user changed.
+  const canViewAs = user?.role === 'ADMIN' || user?.role === 'HR';
+  const enterViewAs = (emp: User) => { setViewAsUser(emp); setCurrentPath('dashboard'); setNavParams(null); };
+  const exitViewAs = () => { setViewAsUser(null); setCurrentPath('dashboard'); setNavParams(null); };
+
+  // Clear the impersonation whenever the real session goes away (logout).
+  useEffect(() => { if (!user) setViewAsUser(null); }, [user]);
 
   // Public Pages State
   // __heroIntent: a tap on the static hero in index.html before React mounted.
@@ -650,6 +662,8 @@ const AppContent: React.FC = () => {
   }
 
   // Priority 3: Authenticated App
+  // The employee being viewed in "view as" mode, else the real (non-null) user.
+  const effectiveUser: User = (canViewAs && viewAsUser) ? viewAsUser : user;
   const renderContent = () => {
     // Super Admin has a dedicated dashboard
     if (isSuperAdmin && (currentPath === 'dashboard' || currentPath === 'super-admin')) {
@@ -657,36 +671,40 @@ const AppContent: React.FC = () => {
     }
     if (isSuperAdmin && currentPath === 'outreach') return <Outreach onNavigate={handleNavigate} />;
 
+    // `effectiveUser` is the employee being viewed when the boss is in
+    // "view as" mode, otherwise the real user. Employee-facing screens use it
+    // so the boss sees exactly what that employee sees; admin-only tools stay
+    // on the real user (and are hidden from the sidebar while impersonating).
     switch (currentPath) {
-      case 'dashboard': return <Dashboard user={user} onNavigate={handleNavigate} />;
+      case 'dashboard': return <Dashboard user={effectiveUser} onNavigate={handleNavigate} />;
       case 'super-admin': return <SuperAdmin user={user} onNavigate={handleNavigate} />;
       case 'upgrade':
         if (user.role === 'ADMIN' || user.role === 'HR') {
           return <Upgrade onBack={() => handleNavigate('dashboard')} />;
         }
-        return <Dashboard user={user} onNavigate={handleNavigate} />;
-      case 'profile': return <Settings user={user} onBack={() => handleNavigate('dashboard')} />;
+        return <Dashboard user={effectiveUser} onNavigate={handleNavigate} />;
+      case 'profile': return <Settings user={effectiveUser} onBack={() => handleNavigate('dashboard')} />;
       case 'employees': return <EmployeeDirectory user={user} selectedEmployeeId={navParams?.selectedEmployeeId} />;
       case 'attendance':
         return (
           <ErrorBoundary>
             <Attendance
-              user={user}
+              user={effectiveUser}
               autoStart={navParams?.autoStart}
               onFinish={() => handleNavigate('dashboard')}
             />
           </ErrorBoundary>
         );
-      case 'attendance-logs': return <AttendanceLogs user={user} viewMode="MY" filterEmployeeId={navParams?.filterEmployeeId} />;
+      case 'attendance-logs': return <AttendanceLogs user={effectiveUser} viewMode="MY" filterEmployeeId={navParams?.filterEmployeeId} />;
       case 'attendance-audit': return <AttendanceLogs user={user} viewMode="AUDIT" />;
-      case 'leave': return <Leave user={user} autoOpen={navParams?.autoOpen} openLeaveId={navParams?.openLeaveId} />;
-      case 'announcements': return <Announcements user={user} />;
+      case 'leave': return <Leave user={effectiveUser} autoOpen={navParams?.autoOpen} openLeaveId={navParams?.openLeaveId} />;
+      case 'announcements': return <Announcements user={effectiveUser} />;
       case 'admin-notifications': return <AdminNotifications user={user} />;
-      case 'performance-review': return <PerformanceReview user={user} />;
+      case 'performance-review': return <PerformanceReview user={effectiveUser} />;
       case 'settings': return <Settings user={user} />;
       case 'reports': return <Reports user={user} />;
       case 'organization': return <Organization initialTab={navParams?.tab} />;
-      default: return <Dashboard user={user} onNavigate={handleNavigate} />;
+      default: return <Dashboard user={effectiveUser} onNavigate={handleNavigate} />;
     }
   };
 
@@ -695,7 +713,13 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <MainLayout currentPath={currentPath} onNavigate={handleNavigate}>
+    <MainLayout
+      currentPath={currentPath}
+      onNavigate={handleNavigate}
+      viewingAs={canViewAs ? viewAsUser : null}
+      onEnterViewAs={canViewAs ? enterViewAs : undefined}
+      onExitViewAs={canViewAs ? exitViewAs : undefined}
+    >
       <Suspense fallback={suspenseFallback}>{renderContent()}</Suspense>
     </MainLayout>
   );
