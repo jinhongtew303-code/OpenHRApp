@@ -101,3 +101,7 @@
   - 公司 JASMINE（ACTIVE，无试用期）与老板账号 jasminetan9319@gmail.com（ADMIN）用 SQL 直接建立，因为没有 RESEND_API_KEY，注册验证码邮件发不出。
   - 尚缺：RESEND_API_KEY（邮件通知、忘记密码邮件）；Android APK 仍指向 Vercel 旧网址。
   - jinhongtew 那一套（Vercel + Supabase gfotntnjyotoytnzilvb）保持不变。
+- 2026-11-24：Jasmine 的网页改名 TTS MEMBER ATTENDANCE、跳过宣传页（Netlify 环境变量 VITE_APP_NAME / VITE_APP_SHORT_NAME / VITE_SKIP_LANDING，PR #2）。员工全部用 iPhone（Safari 添加到主屏幕）。
+- 2026-11-24：每周排班表（每人每天上班时间都不同）。经理/HR/老板在「排班表 Roster」页按格子排时间或休息，可复制上周。打卡迟到判断顺序：当天排班 → 员工固定班次 → 默认班次 → 公司时间；宽限分钟仍取班次/公司设置。需 migration 0058（Jasmine 的数据库已执行）。
+  - 注意：原有的「Temporary Shift Overrides」其实没有存到数据库（只存在浏览器内存），刷新就消失，不要用，改用排班表。
+  - 冻结模块 workdaySessionManager 仍用 resolveShiftForEmployee（未改），自动下班逻辑不受排班表影响。

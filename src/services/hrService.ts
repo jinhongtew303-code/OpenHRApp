@@ -11,6 +11,7 @@ import { notificationService } from './notification.service';
 import { superAdminService } from './superadmin.service';
 import { apiClient } from './api.client';
 import { rewardsService } from './rewards.service';
+import { rosterService } from './roster.service';
 
 export const hrService = {
   subscribe: apiClient.subscribe.bind(apiClient),
@@ -150,4 +151,11 @@ export const hrService = {
   getRewardClaims: rewardsService.getClaims,
   claimReward: rewardsService.claimReward,
   markRewardGiven: rewardsService.markGiven,
+
+  // Weekly roster
+  getRoster: rosterService.getRoster,
+  saveRosterEntry: rosterService.saveEntry,
+  clearRosterEntry: rosterService.clearEntry,
+  copyRosterWeek: rosterService.copyWeek,
+  resolveShiftForDay: rosterService.resolveShiftForDay,
 };
