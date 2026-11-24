@@ -22,6 +22,7 @@ export const changelog: ChangelogRelease[] = [
       { type: 'improvement', description: 'Employees now see a deliberately minimal app: only Home, My Attendance, Leave and My Profile. Announcements and Performance are hidden from their menu, the Announcements widget is removed from their Home, and any other route falls back to their Home.' },
       { type: 'feature', description: 'Admins and managers can export the attendance they are viewing to a real Excel (.xlsx) file with one tap. The export honours the current employee/department filter and includes date, employee, ID, department, check in/out, duration, status, duty, location and remarks.' },
       { type: 'feature', description: 'Employees can now record a lunch break from their Home — "外出午休 Start Break" when they step out and "午休回来 End Break" when they return — shown on a today timeline alongside check in/out. Today\'s overtime is calculated automatically as time worked past the company office end time, and adjusts when an admin edits the check-out.' },
+      { type: 'feature', description: 'Employees now see a "打卡地点 Location" card on Home showing where they checked in today (office → site → back, one entry per check-in), each opening in Google Maps, with a clear "GPS 已关闭" state when a punch has no location.' },
     ],
   },
   {

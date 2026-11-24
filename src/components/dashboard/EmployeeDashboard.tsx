@@ -5,6 +5,7 @@ import { DashboardData } from '../../hooks/dashboard/useDashboard';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardStats } from './DashboardStats';
 import { WorkdayTodayCard } from './WorkdayTodayCard';
+import { LocationTodayCard } from './LocationTodayCard';
 import { AdFrame } from '../ads/AdBanner';
 
 interface Props {
@@ -27,6 +28,10 @@ export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate
 
       {!isLoading && (
         <WorkdayTodayCard shift={data.activeShift} appConfig={data.appConfig} onChanged={() => onRefresh?.()} />
+      )}
+
+      {!isLoading && (
+        <LocationTodayCard punches={data.myTodayAttendance} />
       )}
 
       <DashboardStats

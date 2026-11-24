@@ -18,6 +18,8 @@ export interface DashboardData {
   myTeamName: string;
   approverLabel: string;
   leaveTypes: CustomLeaveType[];
+  /** Today's own punches (for the employee's location card: office → site → back). */
+  myTodayAttendance: Attendance[];
 }
 
 export const useDashboard = (user: any) => {
@@ -92,6 +94,10 @@ export const useDashboard = (user: any) => {
 
         const visibleIds = visibleEmployees.map(t => t.id);
         const presentToday = atts.filter(a => a.date === today && visibleIds.includes(a.employeeId));
+        // This employee's own punches today, earliest first (office → site → back).
+        const myTodayAttendance = atts
+          .filter(a => a.date === today && a.employeeId === user.id)
+          .sort((a, b) => (a.checkIn || '').localeCompare(b.checkIn || ''));
 
         // 3. Context Info
         const myManager = emps.find(e => e.id === me.lineManagerId);
@@ -113,7 +119,8 @@ export const useDashboard = (user: any) => {
           myManager,
           myTeamName,
           approverLabel,
-          leaveTypes: leaveTypes || DEFAULT_LEAVE_TYPES
+          leaveTypes: leaveTypes || DEFAULT_LEAVE_TYPES,
+          myTodayAttendance,
         });
 
       } catch (err) {
