@@ -8,6 +8,7 @@ import { useGeoLocation } from '../hooks/attendance/useGeoLocation';
 import { useAttendance } from '../hooks/attendance/useAttendance';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useToast } from '../context/ToastContext';
+import { stampSelfie } from '../utils/selfieStamp';
 import { NO_LOCATION_ADDRESS, addNoLocationRemark, buildNoLocationRemarks, stripNoLocationRemark } from '../utils/attendanceUtils';
 
 // UI Components
@@ -15,20 +16,23 @@ import { AttendanceHeader } from '../components/attendance/AttendanceHeader';
 import { CameraFeed } from '../components/attendance/CameraFeed';
 import { LocationDisplay } from '../components/attendance/LocationDisplay';
 import { AttendanceActions } from '../components/attendance/AttendanceActions';
+import { CheckInCelebration } from '../components/attendance/CheckInCelebration';
 
 interface AttendanceProps {
   user: any;
   autoStart?: 'OFFICE' | 'FACTORY' | 'FINISH';
   onFinish?: () => void;
+  /** Open the Rewards page (from the after-check-in celebration). */
+  onOpenRewards?: () => void;
 }
 
-const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) => {
+const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish, onOpenRewards }) => {
   const { showToast } = useToast();
 
   // 1. Logic Hooks
   const {
-    currentTime, activeRecord, appConfig, isLoading, status, submitPunch
-  } = useAttendance(user, onFinish);
+    currentTime, activeRecord, appConfig, isLoading, status, lastPunch, submitPunch
+  } = useAttendance(user, onFinish, { holdOpenAfterCheckIn: true });
 
   const {
     videoRef, stream, error: cameraError, facingMode, isTorchOn,
@@ -140,6 +144,18 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
 
     if (!selfieData) return;
 
+    // "Time camera": burn the time, date and name into the photo. If the
+    // browser cannot draw it, the plain selfie is still saved.
+    try {
+      selfieData = await stampSelfie(selfieData, {
+        time: new Date(),
+        name: user.name,
+        label: isCheckOut ? '下班 CHECK OUT' : '上班 CHECK IN',
+      });
+    } catch (e) {
+      console.warn('[Attendance] Selfie timestamp skipped:', e);
+    }
+
     if (withoutLocation) {
       await submitPunch(
         dutyType,
@@ -155,6 +171,12 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
   const handleBack = () => {
     stopCamera();
     if (onFinish) onFinish();
+  };
+
+  const handleOpenRewards = () => {
+    stopCamera();
+    if (onOpenRewards) onOpenRewards();
+    else if (onFinish) onFinish();
   };
 
   const hasPhoto = !!stream || !!fallbackPhoto;
@@ -222,6 +244,10 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
       />
 
       <canvas ref={canvasRef} className="hidden" />
+
+      {status === 'success' && lastPunch === 'IN' && (
+        <CheckInCelebration userId={user.id} onDone={handleBack} onOpenRewards={handleOpenRewards} />
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, Menu, X, LayoutDashboard, Clock, CalendarDays, UserCircle, Sun, Moon } from 'lucide-react';
+import { Database, Menu, X, LayoutDashboard, Clock, CalendarDays, UserCircle, Sun, Moon, Gift } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import NotificationBell from '../components/notifications/NotificationBell';
 import { useAuth } from '../context/AuthContext';
@@ -158,6 +158,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
           >
             <Clock size={20} className={currentPath === 'attendance-logs' || currentPath === 'attendance-audit' ? 'scale-110' : ''} />
             <span className="text-[9px] font-semibold uppercase tracking-tighter">History</span>
+          </button>
+          <button
+            onClick={() => handleNavigate('rewards')}
+            className={`flex flex-col items-center gap-1 transition-all ${currentPath === 'rewards' ? 'text-rose-500' : 'text-slate-400'}`}
+          >
+            <Gift size={20} className={currentPath === 'rewards' ? 'scale-110' : ''} />
+            <span className="text-[9px] font-semibold uppercase tracking-tighter">Rewards</span>
           </button>
           <button 
             onClick={() => handleNavigate('leave')}

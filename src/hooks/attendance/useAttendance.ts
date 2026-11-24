@@ -5,7 +5,12 @@ import { Attendance, AppConfig, Shift } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import { mergeCheckOutRemarks } from '../../utils/attendanceUtils';
 
-export const useAttendance = (user: any, onFinish?: () => void) => {
+interface UseAttendanceOptions {
+  /** After a check-in, stay open so the page can show the rewards celebration (it closes itself). */
+  holdOpenAfterCheckIn?: boolean;
+}
+
+export const useAttendance = (user: any, onFinish?: () => void, options: UseAttendanceOptions = {}) => {
   const { showToast } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeRecord, setActiveRecord] = useState<Attendance | undefined>(undefined);
@@ -13,6 +18,7 @@ export const useAttendance = (user: any, onFinish?: () => void) => {
   const [employeeShift, setEmployeeShift] = useState<Shift | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [lastPunch, setLastPunch] = useState<'IN' | 'OUT' | null>(null);
 
   // Clock Timer
   useEffect(() => {
@@ -83,7 +89,8 @@ export const useAttendance = (user: any, onFinish?: () => void) => {
       const punchTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
       const today = new Date().toISOString().split('T')[0];
 
-      if (activeRecord && !activeRecord.checkOut) {
+      const isClockOut = !!activeRecord && !activeRecord.checkOut;
+      if (isClockOut) {
         // Clock Out
         await hrService.updateAttendance(activeRecord.id, {
           checkOut: punchTime,
@@ -124,13 +131,16 @@ export const useAttendance = (user: any, onFinish?: () => void) => {
         });
       }
       
+      setLastPunch(isClockOut ? 'OUT' : 'IN');
       setStatus('success');
       await refreshData();
-      
-      // Auto-close after success
-      setTimeout(() => {
-        if (onFinish) onFinish();
-      }, 1500);
+
+      // Auto-close after success (a check-in with the celebration closes from there)
+      if (isClockOut || !options.holdOpenAfterCheckIn) {
+        setTimeout(() => {
+          if (onFinish) onFinish();
+        }, 1500);
+      }
 
     } catch (err) {
       console.error(err);
@@ -145,6 +155,7 @@ export const useAttendance = (user: any, onFinish?: () => void) => {
     appConfig,
     isLoading,
     status,
+    lastPunch,
     submitPunch
   };
 };
