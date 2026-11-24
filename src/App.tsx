@@ -49,6 +49,7 @@ const ContactPage = lazyWithReload(() => import('./pages/ContactPage'));
 // page when their cached service worker still references deleted assets.
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
 const EmployeeDirectory = lazyWithReload(() => import('./pages/EmployeeDirectory'));
+const Rewards = lazyWithReload(() => import('./pages/Rewards'));
 const Attendance = lazyWithReload(() => import('./pages/Attendance'));
 const AttendanceLogs = lazyWithReload(() => import('./pages/AttendanceLogs'));
 const Leave = lazyWithReload(() => import('./pages/Leave'));
@@ -666,7 +667,7 @@ const AppContent: React.FC = () => {
   const effectiveUser: User = (canViewAs && viewAsUser) ? viewAsUser : user;
   // Employees get a minimal app: only these paths. Any other path (reached via a
   // stale link or while the boss is "viewing as") falls back to the dashboard.
-  const EMPLOYEE_ALLOWED_PATHS = ['dashboard', 'profile', 'attendance-logs', 'leave', 'attendance'];
+  const EMPLOYEE_ALLOWED_PATHS = ['dashboard', 'profile', 'attendance-logs', 'leave', 'attendance', 'rewards'];
   const renderContent = () => {
     if (effectiveUser.role === 'EMPLOYEE' && !EMPLOYEE_ALLOWED_PATHS.includes(currentPath)) {
       return <Dashboard user={effectiveUser} onNavigate={handleNavigate} />;
@@ -698,11 +699,13 @@ const AppContent: React.FC = () => {
               user={effectiveUser}
               autoStart={navParams?.autoStart}
               onFinish={() => handleNavigate('dashboard')}
+              onOpenRewards={() => handleNavigate('rewards')}
             />
           </ErrorBoundary>
         );
       case 'attendance-logs': return <AttendanceLogs user={effectiveUser} viewMode="MY" filterEmployeeId={navParams?.filterEmployeeId} />;
       case 'attendance-audit': return <AttendanceLogs user={user} viewMode="AUDIT" />;
+      case 'rewards': return <Rewards user={effectiveUser} realUser={user} />;
       case 'leave': return <Leave user={effectiveUser} autoOpen={navParams?.autoOpen} openLeaveId={navParams?.openLeaveId} />;
       case 'announcements': return <Announcements user={effectiveUser} />;
       case 'admin-notifications': return <AdminNotifications user={user} />;

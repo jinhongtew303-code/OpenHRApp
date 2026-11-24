@@ -10,6 +10,7 @@ import { announcementService } from './announcement.service';
 import { notificationService } from './notification.service';
 import { superAdminService } from './superadmin.service';
 import { apiClient } from './api.client';
+import { rewardsService } from './rewards.service';
 
 export const hrService = {
   subscribe: apiClient.subscribe.bind(apiClient),
@@ -140,4 +141,13 @@ export const hrService = {
   sendBulkEmail: superAdminService.sendBulkEmail.bind(superAdminService),
   getRecentBulkCampaigns: superAdminService.getRecentBulkCampaigns.bind(superAdminService),
   getBulkCampaignDetail: superAdminService.getBulkCampaignDetail.bind(superAdminService),
+
+  // Punctuality Rewards
+  getRewardConfig: rewardsService.getRewardConfig,
+  setRewardConfig: rewardsService.setRewardConfig,
+  getPunctualityProgress: rewardsService.getProgress,
+  getTeamPunctuality: rewardsService.getTeamProgress,
+  getRewardClaims: rewardsService.getClaims,
+  claimReward: rewardsService.claimReward,
+  markRewardGiven: rewardsService.markGiven,
 };
