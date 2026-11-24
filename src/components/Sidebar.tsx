@@ -20,6 +20,7 @@ import {
   Gift,
 } from 'lucide-react';
 import HelpButton from './onboarding/HelpButton';
+import { APP_NAME, IS_CUSTOM_BRAND } from '../config/brand';
 import { AdFrame } from './ads/AdBanner';
 
 interface SidebarProps {
@@ -126,7 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, onLogout, ro
           </button>
 
           <div className="text-center">
-            <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-[0.3em]">OpenHRApp v2.9.0</p>
+            <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-[0.3em]">{IS_CUSTOM_BRAND ? APP_NAME : 'OpenHRApp v2.9.0'}</p>
           </div>
         </div>
       </nav>

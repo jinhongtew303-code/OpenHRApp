@@ -16,6 +16,8 @@ declare global {
 }
 
 import React, { useState, useEffect } from 'react';
+import { APP_NAME, IS_CUSTOM_BRAND, SKIP_LANDING } from '../config/brand';
+import { BrandMark } from '../components/shared/BrandMark';
 import { Mail, Lock, ArrowRight, AlertCircle, RefreshCw, Eye, EyeOff, Download, X, Share, MoreVertical, RotateCcw, Building2, Send, Home, CheckCircle2 } from 'lucide-react';
 import { hrService } from '../services/hrService';
 import { authService } from '../services/auth.service';
@@ -34,19 +36,19 @@ const BrandLogo = () => (
     <div className="relative w-24 h-24 md:w-32 md:h-32">
       <div className="absolute inset-0 bg-primary-light blur-[50px] rounded-full -z-10 opacity-50"></div>
       <div className="relative w-full h-full bg-white rounded-[1.75rem] shadow-xl flex items-center justify-center p-4 border-2 border-primary/20">
-        <img
-          src="/img/logo.webp"
-          className="w-full h-full object-contain"
-          alt="OpenHRApp Logo"
-        />
+        <BrandMark textClassName="text-2xl md:text-3xl" />
       </div>
     </div>
     <div className="text-center">
-      <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter flex items-center justify-center">
-        <span className="text-primary">Open</span>
-        <span className="text-[#f59e0b]">HR</span>
-        <span className="text-[#10b981]">App</span>
-      </h1>
+      {IS_CUSTOM_BRAND ? (
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">{APP_NAME}</h1>
+      ) : (
+        <h1 className="text-3xl md:text-4xl font-semibold tracking-tighter flex items-center justify-center">
+          <span className="text-primary">Open</span>
+          <span className="text-[#f59e0b]">HR</span>
+          <span className="text-[#10b981]">App</span>
+        </h1>
+      )}
       <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Personnel Gateway</p>
     </div>
   </div>
@@ -522,6 +524,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onRegisterClick, onBackTo
                   Forgot Password?
                 </button>
 
+                {!SKIP_LANDING && (
                 <button
                   type="button"
                   onClick={onRegisterClick}
@@ -529,9 +532,10 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onRegisterClick, onBackTo
                 >
                   <Building2 size={14} /> Register New Organization
                 </button>
+                )}
 
                 {/* Back to Home */}
-                {onBackToLanding && (
+                {onBackToLanding && !SKIP_LANDING && (
                   <button
                     type="button"
                     onClick={onBackToLanding}
@@ -649,7 +653,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess, onRegisterClick, onBackTo
                       </div>
                       <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
                          <div className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary"><Download size={18} /></div>
-                         <div className="text-xs font-bold text-slate-700">2. Select <span className="text-slate-900">Install App</span> or <span className="text-slate-900">Install OpenHRApp</span></div>
+                         <div className="text-xs font-bold text-slate-700">2. Select <span className="text-slate-900">Install App</span> or <span className="text-slate-900">Install {APP_NAME}</span></div>
                       </div>
                    </div>
                 </div>

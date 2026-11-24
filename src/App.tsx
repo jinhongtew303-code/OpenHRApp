@@ -14,6 +14,7 @@ import SearchDialog from './components/search/SearchDialog';
 import { PWAUpdateBanner } from './components/PWAUpdateBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { lazyWithReload } from './utils/lazyWithReload';
+import { SKIP_LANDING } from './config/brand';
 import { supabase } from './services/supabase';
 import { sessionManager } from './services/session/sessionManager';
 import { User } from './types';
@@ -138,7 +139,7 @@ const AppContent: React.FC = () => {
 
   // Public Pages State
   // __heroIntent: a tap on the static hero in index.html before React mounted.
-  const [showLanding, setShowLanding] = useState(() => !(window as any).__heroIntent);
+  const [showLanding, setShowLanding] = useState(() => !SKIP_LANDING && !(window as any).__heroIntent);
   const [showRegister, setShowRegister] = useState(() => (window as any).__heroIntent === 'register');
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -642,7 +643,7 @@ const AppContent: React.FC = () => {
       return <RegisterOrganization onBack={() => { setShowRegister(false); setShowLanding(true); }} onSuccess={login} />;
     }
     if (!showLanding) {
-      return <Login onLoginSuccess={login} onRegisterClick={() => setShowRegister(true)} onBackToLanding={() => setShowLanding(true)} />;
+      return <Login onLoginSuccess={login} onRegisterClick={() => setShowRegister(true)} onBackToLanding={SKIP_LANDING ? undefined : () => setShowLanding(true)} />;
     }
     return (
       <LandingPage
