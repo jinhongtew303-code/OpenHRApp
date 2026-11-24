@@ -20,6 +20,9 @@
     "migrate:incremental": "node scripts/migrate-from-pb/05-incremental-attendance.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.3",
+    "@capacitor/cli": "^6.2.3",
+    "@capacitor/core": "^6.2.3",
     "@supabase/supabase-js": "^2.105.4",
     "@types/dompurify": "^3.0.5",
     "@vercel/analytics": "^1.6.1",
@@ -34,6 +37,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",
