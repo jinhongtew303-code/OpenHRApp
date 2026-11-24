@@ -29,8 +29,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # ubuntu-latest ships with the Android SDK preinstalled; just accept the
+      # licenses so Gradle can use (or fetch) platform 34 and build-tools.
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
 
       - name: Install dependencies
         run: npm ci
