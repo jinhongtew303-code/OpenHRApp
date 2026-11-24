@@ -3,11 +3,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Clock, MapPin, History, Search, RefreshCw, ChevronRight, ExternalLink,
   Camera, X, SortAsc, SortDesc, Users, Building, Trash2, Save,
-  Calculator, UserX
+  Calculator, UserX, Download
 } from 'lucide-react';
 import { hrService } from '../services/hrService';
 import { Attendance, Employee, AppConfig } from '../types';
 import { consolidateAttendance, calculatePunctuality, calculateDuration, isNoLocationRecord } from '../utils/attendanceUtils';
+import { exportAttendanceToXlsx } from '../utils/exportAttendance';
 import HelpButton from '../components/onboarding/HelpButton';
 import { useToast } from '../context/ToastContext';
 
@@ -275,14 +276,28 @@ const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ user, viewMode = 'MY', 
         </div>
         <div className="flex gap-2">
           {isAdmin && isAuditMode && (
-            <button 
+            <button
               onClick={() => setShowAbsentModal(true)}
               className="p-3 bg-rose-50 border border-rose-100 rounded-2xl shadow-sm text-rose-600 hover:bg-rose-100 transition-all flex items-center gap-2"
             >
               <UserX size={20} /> <span className="text-xs font-bold uppercase hidden md:inline">Mark Absent</span>
             </button>
           )}
-          <button 
+          {(isAdmin || isManager) && (
+            <button
+              onClick={() => {
+                if (filteredAndSortedLogs.length === 0) { showToast('没有可导出的记录', 'error'); return; }
+                const who = employeeFilter !== 'ALL' ? (employees.find(e => e.id === employeeFilter)?.name || 'employee') : 'all';
+                exportAttendanceToXlsx(filteredAndSortedLogs, employees, `attendance-${who}-${new Date().toISOString().split('T')[0]}.xlsx`);
+                showToast('已导出 Excel', 'success');
+              }}
+              className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-sm text-emerald-600 hover:bg-emerald-100 transition-all flex items-center gap-2"
+              title="导出 Excel"
+            >
+              <Download size={20} /> <span className="text-xs font-bold uppercase hidden md:inline">Excel</span>
+            </button>
+          )}
+          <button
             onClick={fetchInitialData}
             className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm text-slate-400 hover:text-primary transition-all"
           >
