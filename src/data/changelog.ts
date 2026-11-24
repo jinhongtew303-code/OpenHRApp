@@ -15,6 +15,14 @@ export interface ChangelogRelease {
 
 export const changelog: ChangelogRelease[] = [
   {
+    date: '2026-11-24',
+    title: 'Boss view-as-employee, and a minimal employee app',
+    entries: [
+      { type: 'feature', description: 'ADMIN/HR can now pick any employee from the header "查看员工" button and see the whole app exactly as that employee sees it, with an amber banner and one-tap exit. The real session is untouched — it is a front-end view switch only.' },
+      { type: 'improvement', description: 'Employees now see a deliberately minimal app: only Home, My Attendance, Leave and My Profile. Announcements and Performance are hidden from their menu, the Announcements widget is removed from their Home, and any other route falls back to their Home.' },
+    ],
+  },
+  {
     date: '2026-11-09',
     title: 'Team managers can report to a boss for leave approval',
     entries: [

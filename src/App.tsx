@@ -664,7 +664,13 @@ const AppContent: React.FC = () => {
   // Priority 3: Authenticated App
   // The employee being viewed in "view as" mode, else the real (non-null) user.
   const effectiveUser: User = (canViewAs && viewAsUser) ? viewAsUser : user;
+  // Employees get a minimal app: only these paths. Any other path (reached via a
+  // stale link or while the boss is "viewing as") falls back to the dashboard.
+  const EMPLOYEE_ALLOWED_PATHS = ['dashboard', 'profile', 'attendance-logs', 'leave', 'attendance'];
   const renderContent = () => {
+    if (effectiveUser.role === 'EMPLOYEE' && !EMPLOYEE_ALLOWED_PATHS.includes(currentPath)) {
+      return <Dashboard user={effectiveUser} onNavigate={handleNavigate} />;
+    }
     // Super Admin has a dedicated dashboard
     if (isSuperAdmin && (currentPath === 'dashboard' || currentPath === 'super-admin')) {
       return <SuperAdmin user={user} onNavigate={handleNavigate} />;

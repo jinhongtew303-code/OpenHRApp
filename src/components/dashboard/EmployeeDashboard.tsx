@@ -4,7 +4,6 @@ import { Network, User, Plus, ArrowRight } from 'lucide-react';
 import { DashboardData } from '../../hooks/dashboard/useDashboard';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardStats } from './DashboardStats';
-import { AnnouncementWidget } from './AnnouncementWidget';
 import { AdFrame } from '../ads/AdBanner';
 
 interface Props {
@@ -80,9 +79,6 @@ export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate
 
       {/* Renders nothing for paid organizations or while this placement is off. */}
       {!isLoading && <AdFrame placement="employee_dashboard" />}
-
-      {/* Announcements Widget */}
-      <AnnouncementWidget user={data.freshUser} onNavigate={onNavigate} />
     </div>
   );
 };
