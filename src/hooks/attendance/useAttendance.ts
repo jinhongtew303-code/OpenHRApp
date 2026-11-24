@@ -16,6 +16,7 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
   const [activeRecord, setActiveRecord] = useState<Attendance | undefined>(undefined);
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [employeeShift, setEmployeeShift] = useState<Shift | null>(null);
+  const [isRosteredOff, setIsRosteredOff] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const [lastPunch, setLastPunch] = useState<'IN' | 'OUT' | null>(null);
@@ -42,7 +43,7 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
       const [reconciled, config, shift] = await Promise.all([
         hrService.getActiveAttendanceWithReconciliation(user.id),
         hrService.getConfig(),
-        hrService.resolveShiftForEmployee(user.id, user.shiftId),
+        hrService.resolveShiftForDay(user.id, user.shiftId),
       ]);
 
       const { active, closedPast } = reconciled;
@@ -53,7 +54,8 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
         setActiveRecord(active);
       }
       setAppConfig(config);
-      setEmployeeShift(shift);
+      setEmployeeShift(shift.shift);
+      setIsRosteredOff(shift.isOff);
 
       // If the workday session manager just closed any past-date sessions
       // as a client-side fallback, surface a one-time, human-readable toast.
@@ -101,11 +103,12 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
         let punchStatus: Attendance['status'] = 'PRESENT';
         
         // Late Calculation Logic (Strict Mode Enforced)
-        // Priority: employee shift > global appConfig
         const shiftStart = employeeShift?.startTime || appConfig?.officeStartTime;
         const shiftGrace = employeeShift?.lateGracePeriod ?? appConfig?.lateGracePeriod ?? 0;
 
-        if (dutyType === 'OFFICE' && shiftStart) {
+        // Priority: roster entry for today > employee shift > global appConfig.
+        // A rostered day off is never marked late.
+        if (dutyType === 'OFFICE' && shiftStart && !isRosteredOff) {
           const [pH, pM] = punchTime.split(':').map(Number);
           const [sH, sM] = shiftStart.split(':').map(Number);
 

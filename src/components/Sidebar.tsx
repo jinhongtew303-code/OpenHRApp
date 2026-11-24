@@ -18,6 +18,7 @@ import {
   Bell,
   Target,
   Gift,
+  CalendarRange,
 } from 'lucide-react';
 import HelpButton from './onboarding/HelpButton';
 import { APP_NAME, IS_CUSTOM_BRAND } from '../config/brand';
@@ -48,6 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, onLogout, ro
     { id: 'attendance-audit', label: 'Attendance Audit', icon: List, roles: ['ADMIN', 'HR', 'MANAGER'] },
     { id: 'leave', label: 'Leave', icon: CalendarDays, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
     { id: 'rewards', label: '准时奖励 Rewards', icon: Gift, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
+    { id: 'roster', label: '排班表 Roster', icon: CalendarRange, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
     // Employees get a deliberately minimal app (4 tabs: Home, My Attendance,
     // Leave, My Profile). Announcements/Performance stay for ADMIN/HR/MANAGER only.
     { id: 'announcements', label: 'Announcements', icon: Megaphone, roles: ['ADMIN', 'HR', 'MANAGER'] },
