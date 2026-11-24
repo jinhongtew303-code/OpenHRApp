@@ -94,4 +94,10 @@
   - 打卡后庆祝画面；Home 显示连续天数卡片；新「准时奖励 Rewards」页（员工 + 老板）。
   - 老板：收到领奖通知、按「已给」、团队排行、设置选项/天数/开始日期/开关。默认关闭，从开始日期算起。
   - 需在 Supabase 手动执行 migration 0057_reward_claims.sql。
-  - 部署仍用 Vercel（open-hr-app-seven.vercel.app）；仓库另加了 netlify.toml 备用，未在 Netlify 部署。
+- 2026-11-24：Jasmine 要完全独立的一套（不与 jinhongtew 的公司共用数据）。
+  - 网页：Netlify（Jasmine 自己的账号）https://openhrapp.netlify.app ，每次 push 到 main 自动部署。
+  - 数据库：Jasmine 自己的 Supabase 项目 cslcvwduvgpbvidsqkwf（悉尼）。57 个 migration 全部执行；28 个 Edge Function 已部署（cron-*、register、email-unsubscribe、public-ad-config 用 --no-verify-jwt）。
+  - cron：CRON_SECRET 存在 Edge Function secrets + vault（名为 cron_secret），pg_cron 从 vault 读取（该项目不允许 ALTER DATABASE SET）。未排 attendance-reminders 和 demo-reset。auto-close-sessions 已实测返回 200。
+  - 公司 JASMINE（ACTIVE，无试用期）与老板账号 jasminetan9319@gmail.com（ADMIN）用 SQL 直接建立，因为没有 RESEND_API_KEY，注册验证码邮件发不出。
+  - 尚缺：RESEND_API_KEY（邮件通知、忘记密码邮件）；Android APK 仍指向 Vercel 旧网址。
+  - jinhongtew 那一套（Vercel + Supabase gfotntnjyotoytnzilvb）保持不变。
