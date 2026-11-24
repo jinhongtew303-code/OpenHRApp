@@ -149,6 +149,9 @@ export interface Attendance {
   date: string;
   checkIn?: string;
   checkOut?: string;
+  /** Lunch break out / back in (HH:mm), when the employee records one. */
+  breakStart?: string;
+  breakEnd?: string;
   status: 'PRESENT' | 'ABSENT' | 'LATE' | 'LEAVE' | 'EARLY_OUT' | 'HALF_DAY';
   location?: { lat: number; lng: number; address?: string };
   remarks?: string;

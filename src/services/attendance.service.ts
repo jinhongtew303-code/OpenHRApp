@@ -178,6 +178,8 @@ const mapAttendance = (r: any): Attendance => ({
   date: r.date,
   checkIn: isoToHHMM(r.check_in),
   checkOut: isoToHHMM(r.check_out),
+  breakStart: isoToHHMM(r.break_start),
+  breakEnd: isoToHHMM(r.break_end),
   status: r.status as any,
   location: {
     lat: Number(r.latitude) || 0,
@@ -441,6 +443,30 @@ export const attendanceService = {
   async deleteAttendance(id: string) {
     if (!isSupabaseConfigured()) return;
     const { error } = await supabase.from('attendance').delete().eq('id', id.trim());
+    if (error) throw error;
+    attendanceService.clearCache();
+    apiClient.notify();
+  },
+
+  /** Record the employee stepping out for lunch (break_start = now). */
+  async startBreak(id: string) {
+    if (!isSupabaseConfigured()) return;
+    const { error } = await supabase
+      .from('attendance')
+      .update({ break_start: new Date().toISOString(), break_end: null })
+      .eq('id', id.trim());
+    if (error) throw error;
+    attendanceService.clearCache();
+    apiClient.notify();
+  },
+
+  /** Record the employee returning from lunch (break_end = now). */
+  async endBreak(id: string) {
+    if (!isSupabaseConfigured()) return;
+    const { error } = await supabase
+      .from('attendance')
+      .update({ break_end: new Date().toISOString() })
+      .eq('id', id.trim());
     if (error) throw error;
     attendanceService.clearCache();
     apiClient.notify();

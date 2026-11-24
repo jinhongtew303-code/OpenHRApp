@@ -23,6 +23,8 @@ export interface DashboardData {
 export const useDashboard = (user: any) => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+  const refetch = () => setReloadKey(k => k + 1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,7 +123,7 @@ export const useDashboard = (user: any) => {
       }
     };
     fetchData();
-  }, [user.id, user.role]);
+  }, [user.id, user.role, reloadKey]);
 
-  return { data, isLoading };
+  return { data, isLoading, refetch };
 };

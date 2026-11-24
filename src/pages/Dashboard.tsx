@@ -29,7 +29,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
-  const { data, isLoading } = useDashboard(user);
+  const { data, isLoading, refetch } = useDashboard(user);
 
   if (isLoading || !data) {
     return <DashboardSkeleton />;
@@ -46,7 +46,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
     return <ManagerDashboard data={data} isLoading={isLoading} onNavigate={onNavigate} />;
   }
 
-  return <EmployeeDashboard data={data} isLoading={isLoading} onNavigate={onNavigate} />;
+  return <EmployeeDashboard data={data} isLoading={isLoading} onNavigate={onNavigate} onRefresh={refetch} />;
 };
 
 export default Dashboard;

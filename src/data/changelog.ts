@@ -21,6 +21,7 @@ export const changelog: ChangelogRelease[] = [
       { type: 'feature', description: 'ADMIN/HR can now pick any employee from the header "查看员工" button and see the whole app exactly as that employee sees it, with an amber banner and one-tap exit. The real session is untouched — it is a front-end view switch only.' },
       { type: 'improvement', description: 'Employees now see a deliberately minimal app: only Home, My Attendance, Leave and My Profile. Announcements and Performance are hidden from their menu, the Announcements widget is removed from their Home, and any other route falls back to their Home.' },
       { type: 'feature', description: 'Admins and managers can export the attendance they are viewing to a real Excel (.xlsx) file with one tap. The export honours the current employee/department filter and includes date, employee, ID, department, check in/out, duration, status, duty, location and remarks.' },
+      { type: 'feature', description: 'Employees can now record a lunch break from their Home — "外出午休 Start Break" when they step out and "午休回来 End Break" when they return — shown on a today timeline alongside check in/out. Today\'s overtime is calculated automatically as time worked past the company office end time, and adjusts when an admin edits the check-out.' },
     ],
   },
   {

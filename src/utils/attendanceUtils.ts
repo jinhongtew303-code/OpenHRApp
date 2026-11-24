@@ -107,8 +107,40 @@ export const calculateDuration = (start: string, end: string): string => {
   
   const diffMins = (eH * 60 + eM) - (sH * 60 + sM);
   if (diffMins < 0) return '0.0'; // Error case
-  
+
   return (diffMins / 60).toFixed(1);
+};
+
+/** Minutes between two HH:mm times, or 0 if either is missing/invalid. */
+export const minutesBetween = (start?: string, end?: string): number => {
+  if (!start || !end || start === '-' || end === '-') return 0;
+  const [sH, sM] = start.split(':').map(Number);
+  const [eH, eM] = end.split(':').map(Number);
+  if ([sH, sM, eH, eM].some(n => Number.isNaN(n))) return 0;
+  const d = (eH * 60 + eM) - (sH * 60 + sM);
+  return d > 0 ? d : 0;
+};
+
+/**
+ * Today's overtime in minutes: time worked past the company's office end time.
+ * Returns 0 until the employee has checked out. Based on the org's configured
+ * officeEndTime (e.g. "18:00"); lunch taken before office end does not change it.
+ */
+export const calculateOvertimeMinutes = (
+  checkOut?: string,
+  officeEndTime?: string,
+): number => {
+  if (!checkOut || checkOut === '-' || !officeEndTime) return 0;
+  return minutesBetween(officeEndTime, checkOut);
+};
+
+/** Format a minute count as "0 min", "45 min", or "2h 05m". */
+export const formatMinutes = (mins: number): string => {
+  if (!mins || mins <= 0) return '0 min';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h === 0) return `${m} min`;
+  return `${h}h ${String(m).padStart(2, '0')}m`;
 };
 
 /**

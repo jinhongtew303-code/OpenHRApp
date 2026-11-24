@@ -4,29 +4,35 @@ import { Network, User, Plus, ArrowRight } from 'lucide-react';
 import { DashboardData } from '../../hooks/dashboard/useDashboard';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardStats } from './DashboardStats';
+import { WorkdayTodayCard } from './WorkdayTodayCard';
 import { AdFrame } from '../ads/AdBanner';
 
 interface Props {
   data: DashboardData;
   isLoading: boolean;
   onNavigate: (path: string, params?: any) => void;
+  onRefresh?: () => void;
 }
 
-export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate }) => {
+export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate, onRefresh }) => {
   return (
     <div className="space-y-4 md:space-y-6 animate-in fade-in duration-700">
-      <DashboardHeader 
-        user={data.freshUser} 
-        activeShift={data.activeShift} 
-        appConfig={data.appConfig} 
+      <DashboardHeader
+        user={data.freshUser}
+        activeShift={data.activeShift}
+        appConfig={data.appConfig}
         isLoading={isLoading}
-        onNavigate={onNavigate} 
+        onNavigate={onNavigate}
       />
 
-      <DashboardStats 
-        leaveUsed={data.leaveUsed} 
-        upcomingHoliday={data.upcomingHoliday} 
-        isLoading={isLoading} 
+      {!isLoading && (
+        <WorkdayTodayCard shift={data.activeShift} appConfig={data.appConfig} onChanged={() => onRefresh?.()} />
+      )}
+
+      <DashboardStats
+        leaveUsed={data.leaveUsed}
+        upcomingHoliday={data.upcomingHoliday}
+        isLoading={isLoading}
       />
 
       {/* Employee Specific Content - Mobile Optimized Grid */}
