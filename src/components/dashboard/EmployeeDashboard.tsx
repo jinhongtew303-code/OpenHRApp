@@ -8,6 +8,8 @@ import { WorkdayTodayCard } from './WorkdayTodayCard';
 import { LocationTodayCard } from './LocationTodayCard';
 import { MileageCard } from './MileageCard';
 import { AdFrame } from '../ads/AdBanner';
+import { StreakMiniCard } from '../rewards/StreakMiniCard';
+import { TodayScheduleCard } from '../roster/TodayScheduleCard';
 
 interface Props {
   data: DashboardData;
@@ -33,6 +35,14 @@ export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate
         isLoading={isLoading}
         onNavigate={onNavigate}
       />
+
+      {!isLoading && data.freshUser?.id && (
+        <TodayScheduleCard userId={data.freshUser.id} shiftId={data.freshUser.shiftId} onOpen={() => onNavigate('roster')} />
+      )}
+
+      {!isLoading && data.freshUser?.id && (
+        <StreakMiniCard userId={data.freshUser.id} onOpen={() => onNavigate('rewards')} />
+      )}
 
       {!isLoading && (
         <WorkdayTodayCard shift={todayShift} appConfig={data.appConfig} onChanged={() => onRefresh?.()} />

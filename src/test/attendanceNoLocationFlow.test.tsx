@@ -42,6 +42,7 @@ vi.mock('../context/SubscriptionContext', () => ({
 vi.mock('../context/ToastContext', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../components/ads/AdBanner', () => ({ AdFrame: () => null }));
 vi.mock('../components/attendance/AttendanceHeader', () => ({ AttendanceHeader: () => null }));
+vi.mock('../components/attendance/CheckInCelebration', () => ({ CheckInCelebration: () => null }));
 vi.mock('../components/attendance/CameraFeed', () => ({
   CameraFeed: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));

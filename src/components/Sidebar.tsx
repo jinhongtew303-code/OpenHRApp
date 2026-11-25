@@ -18,8 +18,11 @@ import {
   Bell,
   Target,
   Car,
+  Gift,
+  CalendarRange,
 } from 'lucide-react';
 import HelpButton from './onboarding/HelpButton';
+import { APP_NAME, IS_CUSTOM_BRAND } from '../config/brand';
 import { AdFrame } from './ads/AdBanner';
 
 interface SidebarProps {
@@ -47,6 +50,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, onLogout, ro
     { id: 'attendance-audit', label: 'Attendance Audit', icon: List, roles: ['ADMIN', 'HR', 'MANAGER'] },
     { id: 'mileage', label: 'Mileage', icon: Car, roles: ['ADMIN', 'HR'] },
     { id: 'leave', label: 'Leave', icon: CalendarDays, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
+    // Rewards + Roster (added by Jasmine's branch) are not used in this setup —
+    // kept for ADMIN/HR only so the PA's minimal app does not show them.
+    { id: 'rewards', label: 'Rewards', icon: Gift, roles: ['ADMIN', 'HR'] },
+    { id: 'roster', label: 'Roster', icon: CalendarRange, roles: ['ADMIN', 'HR'] },
     // Employees get a deliberately minimal app (4 tabs: Home, My Attendance,
     // Leave, My Profile). Announcements/Performance stay for ADMIN/HR/MANAGER only.
     { id: 'announcements', label: 'Announcements', icon: Megaphone, roles: ['ADMIN', 'HR', 'MANAGER'] },
@@ -126,7 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, onLogout, ro
           </button>
 
           <div className="text-center">
-            <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-[0.3em]">OpenHRApp v2.9.0</p>
+            <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-[0.3em]">{IS_CUSTOM_BRAND ? APP_NAME : 'OpenHRApp v2.9.0'}</p>
           </div>
         </div>
       </nav>

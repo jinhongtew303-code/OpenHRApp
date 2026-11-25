@@ -15,6 +15,7 @@ import SearchDialog from './components/search/SearchDialog';
 import { PWAUpdateBanner } from './components/PWAUpdateBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { lazyWithReload } from './utils/lazyWithReload';
+import { SKIP_LANDING } from './config/brand';
 import { supabase } from './services/supabase';
 import { sessionManager } from './services/session/sessionManager';
 import { User } from './types';
@@ -50,6 +51,8 @@ const ContactPage = lazyWithReload(() => import('./pages/ContactPage'));
 // page when their cached service worker still references deleted assets.
 const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
 const EmployeeDirectory = lazyWithReload(() => import('./pages/EmployeeDirectory'));
+const Rewards = lazyWithReload(() => import('./pages/Rewards'));
+const Roster = lazyWithReload(() => import('./pages/Roster'));
 const Attendance = lazyWithReload(() => import('./pages/Attendance'));
 const AttendanceLogs = lazyWithReload(() => import('./pages/AttendanceLogs'));
 const MileageLogs = lazyWithReload(() => import('./pages/MileageLogs'));
@@ -139,7 +142,7 @@ const AppContent: React.FC = () => {
 
   // Public Pages State
   // __heroIntent: a tap on the static hero in index.html before React mounted.
-  const [showLanding, setShowLanding] = useState(() => !(window as any).__heroIntent);
+  const [showLanding, setShowLanding] = useState(() => !SKIP_LANDING && !(window as any).__heroIntent);
   const [showRegister, setShowRegister] = useState(() => (window as any).__heroIntent === 'register');
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -649,7 +652,7 @@ const AppContent: React.FC = () => {
       return <RegisterOrganization onBack={() => { setShowRegister(false); setShowLanding(true); }} onSuccess={login} />;
     }
     if (!showLanding) {
-      return <Login onLoginSuccess={login} onRegisterClick={() => setShowRegister(true)} onBackToLanding={() => setShowLanding(true)} />;
+      return <Login onLoginSuccess={login} onRegisterClick={() => setShowRegister(true)} onBackToLanding={SKIP_LANDING ? undefined : () => setShowLanding(true)} />;
     }
     return (
       <LandingPage
@@ -674,7 +677,7 @@ const AppContent: React.FC = () => {
   const effectiveUser: User = (canViewAs && viewAsUser) ? viewAsUser : user;
   // Employees get a minimal app: only these paths. Any other path (reached via a
   // stale link or while the boss is "viewing as") falls back to the dashboard.
-  const EMPLOYEE_ALLOWED_PATHS = ['dashboard', 'profile', 'attendance-logs', 'leave', 'attendance'];
+  const EMPLOYEE_ALLOWED_PATHS = ['dashboard', 'profile', 'attendance-logs', 'leave', 'attendance', 'rewards', 'roster'];
   const renderContent = () => {
     if (effectiveUser.role === 'EMPLOYEE' && !EMPLOYEE_ALLOWED_PATHS.includes(currentPath)) {
       return <Dashboard user={effectiveUser} onNavigate={handleNavigate} />;
@@ -706,12 +709,15 @@ const AppContent: React.FC = () => {
               user={effectiveUser}
               autoStart={navParams?.autoStart}
               onFinish={() => handleNavigate('dashboard')}
+              onOpenRewards={() => handleNavigate('rewards')}
             />
           </ErrorBoundary>
         );
       case 'attendance-logs': return <AttendanceLogs user={effectiveUser} viewMode="MY" filterEmployeeId={navParams?.filterEmployeeId} />;
       case 'attendance-audit': return <AttendanceLogs user={user} viewMode="AUDIT" />;
       case 'mileage': return <MileageLogs user={user} />;
+      case 'rewards': return <Rewards user={effectiveUser} realUser={user} />;
+      case 'roster': return <Roster user={effectiveUser} realUser={user} />;
       case 'leave': return <Leave user={effectiveUser} autoOpen={navParams?.autoOpen} openLeaveId={navParams?.openLeaveId} />;
       case 'announcements': return <Announcements user={effectiveUser} />;
       case 'admin-notifications': return <AdminNotifications user={user} />;
