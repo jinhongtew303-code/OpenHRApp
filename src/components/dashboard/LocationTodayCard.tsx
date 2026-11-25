@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Navigation, Ban, ExternalLink } from 'lucide-react';
 import { Attendance } from '../../types';
 import { isNoLocationRecord } from '../../utils/attendanceUtils';
+import { useLang } from '../../context/LanguageContext';
 
 interface Props {
   punches: Attendance[];   // today's punches, earliest first
@@ -17,6 +18,7 @@ const hasCoords = (a: Attendance) =>
  * check-in points only. No map API key needed — each point links to Google Maps.
  */
 export const LocationTodayCard: React.FC<Props> = ({ punches }) => {
+  const { t } = useLang();
   const withLocation = punches.filter(hasCoords);
   const gpsOff = punches.length > 0 && withLocation.length === 0;
 
@@ -25,27 +27,27 @@ export const LocationTodayCard: React.FC<Props> = ({ punches }) => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-primary-light rounded-lg text-primary"><MapPin size={14} /></div>
-          <h3 className="font-semibold text-sm text-slate-900">打卡地点 Location</h3>
+          <h3 className="font-semibold text-sm text-slate-900">{t('loc.title')}</h3>
         </div>
         {punches.length > 0 && (
           gpsOff ? (
             <span className="flex items-center gap-1 text-rose-500 text-xs font-semibold">
-              <Ban size={12} /> GPS 已关闭
+              <Ban size={12} /> {t('loc.gpsOff')}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
-              <Navigation size={12} /> GPS 正常
+              <Navigation size={12} /> {t('loc.gpsOk')}
             </span>
           )
         )}
       </div>
 
       {punches.length === 0 && (
-        <p className="text-xs text-slate-400 text-center py-2">今天还没打卡</p>
+        <p className="text-xs text-slate-400 text-center py-2">{t('loc.none')}</p>
       )}
 
       {gpsOff && (
-        <p className="text-xs text-slate-400 py-1">今天的打卡没有记录位置（定位关闭或未获取）。</p>
+        <p className="text-xs text-slate-400 py-1">{t('loc.none')}</p>
       )}
 
       <div className="space-y-2">
@@ -65,7 +67,7 @@ export const LocationTodayCard: React.FC<Props> = ({ punches }) => {
               <div className="text-sm font-medium text-slate-700 truncate">
                 {p.location?.address || `${p.location!.lat.toFixed(5)}, ${p.location!.lng.toFixed(5)}`}
               </div>
-              <div className="text-[10px] text-slate-400">点击在地图查看</div>
+              <div className="text-[10px] text-slate-400">{t('loc.map')}</div>
             </div>
             <ExternalLink size={14} className="text-slate-300 group-hover:text-primary flex-shrink-0" />
           </a>

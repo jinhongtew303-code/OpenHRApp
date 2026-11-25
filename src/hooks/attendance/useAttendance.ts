@@ -73,7 +73,7 @@ export const useAttendance = (user: any, onFinish?: () => void) => {
   }, [refreshData]);
 
   const submitPunch = async (
-    dutyType: 'OFFICE' | 'FACTORY',
+    dutyType: 'OFFICE' | 'FACTORY' | 'OUTSIDE',
     remarks: string,
     location: { lat: number; lng: number; address: string } | null,
     selfieData: string
@@ -119,7 +119,9 @@ export const useAttendance = (user: any, onFinish?: () => void) => {
           status: punchStatus, 
           location: location ?? undefined,
           selfie: selfieData,
-          remarks: dutyType === 'FACTORY' ? `[FACTORY] ${remarks}` : remarks,
+          remarks: dutyType === 'FACTORY' ? `[FACTORY] ${remarks}`
+                 : dutyType === 'OUTSIDE' ? `[OUTSIDE] ${remarks}`
+                 : remarks,
           dutyType: dutyType
         });
       }

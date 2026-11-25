@@ -7,6 +7,7 @@ import {
 import { hrService } from '../services/hrService';
 import { User as UserType, Employee, Shift } from '../types';
 import { ThemeSelector } from '../components/settings/ThemeSelector';
+import { LanguageSelector } from '../components/settings/LanguageSelector';
 import { AdminVerificationPanel } from '../components/admin/AdminVerificationPanel';
 import HelpButton from '../components/onboarding/HelpButton';
 import { ReEnableSetupGuide } from '../components/onboarding/SetupChecklist';
@@ -160,9 +161,10 @@ const Settings: React.FC<SettingsProps> = ({ user, onBack }) => {
         </div>
       </header>
 
-      {/* Theme Selector Module */}
-      <div className="max-w-3xl">
+      {/* Theme + Language Modules */}
+      <div className="max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-5">
         <ThemeSelector />
+        <LanguageSelector />
       </div>
 
       {!profile ? (

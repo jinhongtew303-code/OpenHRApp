@@ -156,7 +156,23 @@ export interface Attendance {
   location?: { lat: number; lng: number; address?: string };
   remarks?: string;
   selfie?: string;
-  dutyType?: 'OFFICE' | 'FACTORY';
+  dutyType?: 'OFFICE' | 'FACTORY' | 'OUTSIDE';
+  organizationId?: string;
+}
+
+/** A work trip in the employee's own car, odometer photographed at start + end. */
+export interface MileageLog {
+  id: string;
+  employeeId: string;
+  employeeName?: string;
+  date: string;
+  startReading?: number;
+  startPhoto?: string;   // compressed webp data URL
+  startAt?: string;      // ISO timestamp
+  endReading?: number;
+  endPhoto?: string;
+  endAt?: string;
+  distance?: number;     // computed = endReading - startReading
   organizationId?: string;
 }
 
@@ -306,6 +322,7 @@ export interface AppConfig {
   allowCheckInWithoutLocation?: boolean; // On unless set to false
   dutyLabel1?: string; // Display label for OFFICE duty type (default "Office")
   dutyLabel2?: string; // Display label for FACTORY duty type (default "Factory")
+  dutyLabel3?: string; // Display label for OUTSIDE duty type (default "Outside")
 }
 
 export interface RegistrationData {

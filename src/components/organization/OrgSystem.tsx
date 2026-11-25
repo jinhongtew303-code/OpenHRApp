@@ -308,6 +308,10 @@ export const OrgSystem: React.FC<Props> = ({ config, onSave }) => {
                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-1">Duty Type 2 (e.g. Factory, Field, On-site)</label>
                <input type="text" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold focus:ring-4 focus:ring-blue-50 transition-all outline-none" value={config.dutyLabel2 || 'Factory'} onChange={e => handleChange('dutyLabel2', e.target.value)} placeholder="Factory" />
             </div>
+            <div className="space-y-1">
+               <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-1">Duty Type 3 (e.g. Outside, Site, Client)</label>
+               <input type="text" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold focus:ring-4 focus:ring-blue-50 transition-all outline-none" value={config.dutyLabel3 || 'Outside'} onChange={e => handleChange('dutyLabel3', e.target.value)} placeholder="Outside" />
+            </div>
          </div>
       </div>
     </div>

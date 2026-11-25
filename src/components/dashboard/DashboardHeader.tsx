@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Building, Building2, ArrowRight } from 'lucide-react';
+import { Building, Building2, MapPin, ArrowRight } from 'lucide-react';
 import { Employee, Attendance, AppConfig } from '../../types';
 
 interface Props {
@@ -40,26 +40,33 @@ export const DashboardHeader: React.FC<Props> = ({ user, activeShift, appConfig,
               <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-white animate-ping opacity-75"></div>
             </div>
             <div className="text-left">
-              <p className="text-[9px] font-semibold text-rose-100 uppercase tracking-widest leading-none mb-1">{activeShift.dutyType === 'FACTORY' ? (appConfig?.dutyLabel2 || 'Factory') : (appConfig?.dutyLabel1 || 'Office')} Session Active</p>
+              <p className="text-[9px] font-semibold text-rose-100 uppercase tracking-widest leading-none mb-1">{activeShift.dutyType === 'FACTORY' ? (appConfig?.dutyLabel2 || 'Factory') : activeShift.dutyType === 'OUTSIDE' ? (appConfig?.dutyLabel3 || 'Outside') : (appConfig?.dutyLabel1 || 'Office')} Session Active</p>
               <p className="text-xs font-semibold text-white uppercase">Check Out</p>
             </div>
             <ArrowRight size={16} className="text-rose-200 group-hover:text-white transition-colors ml-2" />
           </button>
         ) : (
-          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto animate-in slide-in-from-right-4">
-            <button 
+          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto animate-in slide-in-from-right-4">
+            <button
               onClick={() => onNavigate('attendance-quick-office')}
-              className="flex items-center justify-center gap-2 px-4 py-3 md:px-5 md:py-4 bg-primary text-white rounded-2xl md:rounded-[1.5rem] shadow-lg shadow-primary-light hover:bg-primary-hover active:scale-95 transition-all"
+              className="flex items-center justify-center gap-2 px-3 py-3 md:px-4 md:py-4 bg-primary text-white rounded-2xl md:rounded-[1.5rem] shadow-lg shadow-primary-light hover:bg-primary-hover active:scale-95 transition-all"
             >
               <Building size={16} />
               <span className="text-[10px] font-semibold uppercase tracking-widest">{appConfig?.dutyLabel1 || 'Office'}</span>
             </button>
             <button
               onClick={() => onNavigate('attendance-quick-factory')}
-              className="flex items-center justify-center gap-2 px-4 py-3 md:px-5 md:py-4 bg-primary text-white rounded-2xl md:rounded-[1.5rem] shadow-lg shadow-primary-light hover:bg-primary-hover active:scale-95 transition-all opacity-80"
+              className="flex items-center justify-center gap-2 px-3 py-3 md:px-4 md:py-4 bg-primary text-white rounded-2xl md:rounded-[1.5rem] shadow-lg shadow-primary-light hover:bg-primary-hover active:scale-95 transition-all opacity-90"
             >
               <Building2 size={16} />
               <span className="text-[10px] font-semibold uppercase tracking-widest">{appConfig?.dutyLabel2 || 'Factory'}</span>
+            </button>
+            <button
+              onClick={() => onNavigate('attendance-quick-outside')}
+              className="flex items-center justify-center gap-2 px-3 py-3 md:px-4 md:py-4 bg-primary text-white rounded-2xl md:rounded-[1.5rem] shadow-lg shadow-primary-light hover:bg-primary-hover active:scale-95 transition-all opacity-80"
+            >
+              <MapPin size={16} />
+              <span className="text-[10px] font-semibold uppercase tracking-widest">{appConfig?.dutyLabel3 || 'Outside'}</span>
             </button>
           </div>
         )}

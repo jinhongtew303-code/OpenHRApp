@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import NotificationBell from '../components/notifications/NotificationBell';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLang } from '../context/LanguageContext';
 import { SubscriptionBanner } from '../components/subscription';
 import ViewAsControls from '../components/viewas/ViewAsControls';
 import { User } from '../types';
@@ -25,6 +26,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
   // menus, avatar) reflects that employee so it matches exactly what they see.
   const user = viewingAs ?? realUser;
   const { darkMode, setDarkModePreference } = useTheme();
+  const { t } = useLang();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleNavigate = (path: string) => {
@@ -150,28 +152,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
             className={`flex flex-col items-center gap-1 transition-all ${currentPath === 'dashboard' ? 'text-primary' : 'text-slate-400'}`}
           >
             <LayoutDashboard size={20} className={currentPath === 'dashboard' ? 'scale-110' : ''} />
-            <span className="text-[9px] font-semibold uppercase tracking-tighter">Home</span>
+            <span className="text-[9px] font-semibold uppercase tracking-tighter">{t('nav.home')}</span>
           </button>
           <button 
             onClick={() => handleNavigate('attendance-logs')}
             className={`flex flex-col items-center gap-1 transition-all ${currentPath === 'attendance-logs' || currentPath === 'attendance-audit' ? 'text-primary' : 'text-slate-400'}`}
           >
             <Clock size={20} className={currentPath === 'attendance-logs' || currentPath === 'attendance-audit' ? 'scale-110' : ''} />
-            <span className="text-[9px] font-semibold uppercase tracking-tighter">History</span>
+            <span className="text-[9px] font-semibold uppercase tracking-tighter">{t('nav.history')}</span>
           </button>
           <button 
             onClick={() => handleNavigate('leave')}
             className={`flex flex-col items-center gap-1 transition-all ${currentPath === 'leave' ? 'text-primary' : 'text-slate-400'}`}
           >
             <CalendarDays size={20} className={currentPath === 'leave' ? 'scale-110' : ''} />
-            <span className="text-[9px] font-semibold uppercase tracking-tighter">Leave</span>
+            <span className="text-[9px] font-semibold uppercase tracking-tighter">{t('nav.leave')}</span>
           </button>
           <button 
             onClick={() => handleNavigate('profile')}
             className={`flex flex-col items-center gap-1 transition-all ${currentPath === 'profile' ? 'text-primary' : 'text-slate-400'}`}
           >
             <UserCircle size={20} className={currentPath === 'profile' ? 'scale-110' : ''} />
-            <span className="text-[9px] font-semibold uppercase tracking-tighter">Account</span>
+            <span className="text-[9px] font-semibold uppercase tracking-tighter">{t('nav.account')}</span>
           </button>
         </nav>
       </main>

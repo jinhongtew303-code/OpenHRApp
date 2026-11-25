@@ -17,6 +17,7 @@ import {
   Megaphone,
   Bell,
   Target,
+  Car,
 } from 'lucide-react';
 import HelpButton from './onboarding/HelpButton';
 import { AdFrame } from './ads/AdBanner';
@@ -44,6 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, onLogout, ro
     { id: 'profile', label: 'My Profile', icon: UserCircle, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
     { id: 'attendance-logs', label: 'My Attendance', icon: History, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
     { id: 'attendance-audit', label: 'Attendance Audit', icon: List, roles: ['ADMIN', 'HR', 'MANAGER'] },
+    { id: 'mileage', label: 'Mileage', icon: Car, roles: ['ADMIN', 'HR'] },
     { id: 'leave', label: 'Leave', icon: CalendarDays, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
     // Employees get a deliberately minimal app (4 tabs: Home, My Attendance,
     // Leave, My Profile). Announcements/Performance stay for ADMIN/HR/MANAGER only.

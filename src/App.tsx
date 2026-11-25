@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { Loader2 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { SearchProvider } from './context/SearchContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { ToastProvider } from './context/ToastContext';
@@ -51,6 +52,7 @@ const Dashboard = lazyWithReload(() => import('./pages/Dashboard'));
 const EmployeeDirectory = lazyWithReload(() => import('./pages/EmployeeDirectory'));
 const Attendance = lazyWithReload(() => import('./pages/Attendance'));
 const AttendanceLogs = lazyWithReload(() => import('./pages/AttendanceLogs'));
+const MileageLogs = lazyWithReload(() => import('./pages/MileageLogs'));
 const Leave = lazyWithReload(() => import('./pages/Leave'));
 const Settings = lazyWithReload(() => import('./pages/Settings'));
 const Reports = lazyWithReload(() => import('./pages/Reports'));
@@ -336,6 +338,7 @@ const AppContent: React.FC = () => {
           // Hash pattern matched a shortcut — derive autoStart from the hash
           if (hash === '/attendance/quick-office') resolvedParams = { autoStart: 'OFFICE' };
           else if (hash === '/attendance/quick-factory') resolvedParams = { autoStart: 'FACTORY' };
+          else if (hash === '/attendance/quick-outside') resolvedParams = { autoStart: 'OUTSIDE' };
           else if (hash === '/attendance/finish') resolvedParams = { autoStart: 'FINISH' };
         }
         setCurrentPath(route.path);
@@ -459,6 +462,7 @@ const AppContent: React.FC = () => {
         if (route.path === 'attendance' && !resolvedParams) {
           if (hash === '/attendance/quick-office') resolvedParams = { autoStart: 'OFFICE' };
           else if (hash === '/attendance/quick-factory') resolvedParams = { autoStart: 'FACTORY' };
+          else if (hash === '/attendance/quick-outside') resolvedParams = { autoStart: 'OUTSIDE' };
           else if (hash === '/attendance/finish') resolvedParams = { autoStart: 'FINISH' };
         }
         setCurrentPath(route.path);
@@ -545,6 +549,10 @@ const AppContent: React.FC = () => {
       setCurrentPath('attendance');
       setNavParams({ autoStart: 'FACTORY' });
       navigateToRoute('attendance', { autoStart: 'FACTORY' });
+    } else if (path === 'attendance-quick-outside') {
+      setCurrentPath('attendance');
+      setNavParams({ autoStart: 'OUTSIDE' });
+      navigateToRoute('attendance', { autoStart: 'OUTSIDE' });
     } else if (path === 'attendance-finish') {
       setCurrentPath('attendance');
       setNavParams({ autoStart: 'FINISH' });
@@ -703,6 +711,7 @@ const AppContent: React.FC = () => {
         );
       case 'attendance-logs': return <AttendanceLogs user={effectiveUser} viewMode="MY" filterEmployeeId={navParams?.filterEmployeeId} />;
       case 'attendance-audit': return <AttendanceLogs user={user} viewMode="AUDIT" />;
+      case 'mileage': return <MileageLogs user={user} />;
       case 'leave': return <Leave user={effectiveUser} autoOpen={navParams?.autoOpen} openLeaveId={navParams?.openLeaveId} />;
       case 'announcements': return <Announcements user={effectiveUser} />;
       case 'admin-notifications': return <AdminNotifications user={user} />;
@@ -736,6 +745,7 @@ const App: React.FC = () => {
     <AuthProvider>
       <SubscriptionProvider>
         <ThemeProvider>
+          <LanguageProvider>
           <ToastProvider>
             <SearchProvider>
               <Suspense fallback={suspenseFallback}>
@@ -747,6 +757,7 @@ const App: React.FC = () => {
               <PWAUpdateBanner />
             </SearchProvider>
           </ToastProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </SubscriptionProvider>
     </AuthProvider>

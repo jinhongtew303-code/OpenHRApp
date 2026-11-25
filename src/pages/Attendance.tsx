@@ -18,7 +18,7 @@ import { AttendanceActions } from '../components/attendance/AttendanceActions';
 
 interface AttendanceProps {
   user: any;
-  autoStart?: 'OFFICE' | 'FACTORY' | 'FINISH';
+  autoStart?: 'OFFICE' | 'FACTORY' | 'OUTSIDE' | 'FINISH';
   onFinish?: () => void;
 }
 
@@ -46,7 +46,7 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
 
   // 2. Local UI State
   const [remarks, setRemarks] = useState('');
-  const [dutyType, setDutyType] = useState<'OFFICE' | 'FACTORY'>('OFFICE');
+  const [dutyType, setDutyType] = useState<'OFFICE' | 'FACTORY' | 'OUTSIDE'>('OFFICE');
   const [isMobile, setIsMobile] = useState(false);
   const [fallbackPhoto, setFallbackPhoto] = useState<string | null>(null);
   const [skipLocationChosen, setSkipLocationChosen] = useState(false);
@@ -59,14 +59,16 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
     && appConfig?.allowCheckInWithoutLocation !== false;
   const withoutLocation = canSkipLocation && skipLocationChosen;
   const locationReady = isCheckOut || !!location || withoutLocation;
-  // The auto-written remark does not count as the mandatory factory details.
-  const factoryInputMissing = dutyType === 'FACTORY'
+  // Factory and Outside both require a place name/details in the remarks
+  // (which office does not). The auto-written "no location" remark does not count.
+  const needsPlaceName = dutyType === 'FACTORY' || dutyType === 'OUTSIDE';
+  const factoryInputMissing = needsPlaceName
     && !(withoutLocation ? stripNoLocationRemark(remarks) : remarks.trim());
 
   const handleToggleWithoutLocation = () => {
     setRemarks(current => skipLocationChosen
       ? stripNoLocationRemark(current)
-      : addNoLocationRemark(current, dutyType === 'FACTORY'));
+      : addNoLocationRemark(current, needsPlaceName));
     setSkipLocationChosen(!skipLocationChosen);
   };
 
@@ -94,6 +96,7 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
   // Update duty type when autoStart or activeRecord changes (no camera restart)
   useEffect(() => {
     if (autoStart === 'FACTORY') setDutyType('FACTORY');
+    else if (autoStart === 'OUTSIDE') setDutyType('OUTSIDE');
     else if (activeRecord?.dutyType) setDutyType(activeRecord.dutyType);
   }, [autoStart, activeRecord?.dutyType]);
 
@@ -114,7 +117,12 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
     }
 
     if (factoryInputMissing) {
-      showToast("Mandatory: Please mention the Factory Name and details in remarks.", 'warning');
+      showToast(
+        dutyType === 'OUTSIDE'
+          ? "请在备注填写工作地点/详情 (Please enter the work location / details in remarks)."
+          : "Mandatory: Please mention the Factory Name and details in remarks.",
+        'warning'
+      );
       return;
     }
 
@@ -209,7 +217,7 @@ const Attendance: React.FC<AttendanceProps> = ({ user, autoStart, onFinish }) =>
 
       <AttendanceActions
         dutyType={dutyType}
-        dutyLabel={dutyType === 'FACTORY' ? (appConfig?.dutyLabel2 || 'Factory') : (appConfig?.dutyLabel1 || 'Office')}
+        dutyLabel={dutyType === 'FACTORY' ? (appConfig?.dutyLabel2 || 'Factory') : dutyType === 'OUTSIDE' ? 'Outside' : (appConfig?.dutyLabel1 || 'Office')}
         remarks={remarks}
         setRemarks={setRemarks}
         onSubmit={handlePunchSubmit}

@@ -15,6 +15,16 @@ export interface ChangelogRelease {
 
 export const changelog: ChangelogRelease[] = [
   {
+    date: '2026-11-25',
+    title: 'Mileage tracking, Outside check-in, language switch, break fix',
+    entries: [
+      { type: 'feature', description: 'New "里程 Mileage" tracking for own-car work trips. On Home the employee taps Start Trip, photographs the odometer and types the reading, then End Trip the same way — the distance is computed from the two readings (no GPS/API). The boss gets a Mileage page listing every employee\'s trips with photos and a one-tap Excel (.xlsx) export, totalled.' },
+      { type: 'feature', description: 'Check-in now offers a third location, "Outside" (外勤), next to Office and Factory — for work at any site that is neither. Like Factory it asks for the place name in the remarks. The boss can rename all three labels under Organization settings.' },
+      { type: 'feature', description: 'Language switch (English / 中文) in System & Profile, available to every role and saved per device. It covers the employee-facing screens the PA uses most — the Home punch cards, the bottom navigation and the Profile page.' },
+      { type: 'fix', description: 'Fixed "外出午休 Start Break" failing with "操作失败，请重试": the new break columns were not yet in the API schema cache, and the Home card was reading the break state from a source that did not carry it. The break now records and shows correctly, and the check-in time on the card shows as HH:mm instead of a raw timestamp.' },
+    ],
+  },
+  {
     date: '2026-11-24',
     title: 'Boss view-as-employee, minimal employee app, Excel export',
     entries: [

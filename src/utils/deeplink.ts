@@ -65,6 +65,7 @@ const ROUTE_TABLE: RouteEntry[] = [
   // -- Attendance clock-in shortcuts (must be before generic attendance) --
   { regex: /^#\/attendance\/quick-office\/?$/, path: 'attendance',     paramNames: [] },  // params set in reverse map
   { regex: /^#\/attendance\/quick-factory\/?$/,path: 'attendance',     paramNames: [] },
+  { regex: /^#\/attendance\/quick-outside\/?$/,path: 'attendance',     paramNames: [] },
   { regex: /^#\/attendance\/finish\/?$/,      path: 'attendance',      paramNames: [] },
   { regex: /^#\/attendance\/clock-in\/?$/,    path: 'attendance',      paramNames: [] },
 
@@ -75,6 +76,9 @@ const ROUTE_TABLE: RouteEntry[] = [
 
   // -- Attendance audit --
   { regex: /^#\/attendance-audit\/?$/,        path: 'attendance-audit', paramNames: [] },
+
+  // -- Mileage (boss view) --
+  { regex: /^#\/mileage\/?$/,                 path: 'mileage',         paramNames: [] },
 
   // -- Leave (specific request) --
   { regex: /^#\/leave\/([^/]+)$/,             path: 'leave',           paramNames: ['openLeaveId'] },
@@ -111,12 +115,14 @@ const REVERSE_MAP: Record<string, HashBuilder> = {
     switch (p.autoStart) {
       case 'OFFICE':  return '#/attendance/quick-office';
       case 'FACTORY': return '#/attendance/quick-factory';
+      case 'OUTSIDE': return '#/attendance/quick-outside';
       case 'FINISH':  return '#/attendance/finish';
       default:        return '#/attendance/clock-in';
     }
   },
   'attendance-logs':      (p) => p?.filterEmployeeId ? `#/attendance/${p.filterEmployeeId}` : '#/attendance',
   'attendance-audit':     () => '#/attendance-audit',
+  'mileage':              () => '#/mileage',
   'leave':                (p) => p?.openLeaveId ? `#/leave/${p.openLeaveId}` : '#/leaves',
   'performance-review':   () => '#/reviews',
   'reports':              () => '#/reports',

@@ -5,7 +5,7 @@ import { Attendance } from '../../types';
 import { AdFrame } from '../ads/AdBanner';
 
 interface Props {
-  dutyType: 'OFFICE' | 'FACTORY';
+  dutyType: 'OFFICE' | 'FACTORY' | 'OUTSIDE';
   dutyLabel?: string;
   remarks: string;
   setRemarks: (val: string) => void;
@@ -22,11 +22,13 @@ export const AttendanceActions: React.FC<Props> = ({
   dutyType, dutyLabel, remarks, setRemarks, onSubmit, status, isDisabled, activeRecord,
   canSkipLocation, withoutLocation, onToggleWithoutLocation
 }) => {
-  const displayLabel = dutyLabel || (dutyType === 'FACTORY' ? 'Factory' : 'Office');
-  const remarksRequired = dutyType === 'FACTORY' || !!withoutLocation;
+  const displayLabel = dutyLabel || (dutyType === 'FACTORY' ? 'Factory' : dutyType === 'OUTSIDE' ? 'Outside' : 'Office');
+  // Factory and Outside both require a place name/details in the remarks.
+  const needsPlace = dutyType === 'FACTORY' || dutyType === 'OUTSIDE';
+  const remarksRequired = needsPlace || !!withoutLocation;
   const remarksPlaceholder = withoutLocation
-    ? (dutyType === 'FACTORY' ? `${displayLabel} Name & why no location...` : 'Why is your location not available?')
-    : (dutyType === 'FACTORY' ? `${displayLabel} Name & Details...` : 'Optional remarks...');
+    ? (needsPlace ? `${displayLabel} name & why no location...` : 'Why is your location not available?')
+    : (needsPlace ? `${displayLabel} name & details...` : 'Optional remarks...');
 
   return (
     <div className="px-8 pt-4 pb-12 flex flex-col items-center gap-4">
@@ -52,7 +54,7 @@ export const AttendanceActions: React.FC<Props> = ({
       {withoutLocation && (
         <div className="w-full max-w-[320px] pl-3 pr-1 flex items-center justify-between gap-2 bg-amber-50 border border-amber-300 rounded-2xl">
           <p className="py-2 text-xs font-semibold text-amber-800 leading-snug">
-            {dutyType === 'FACTORY'
+            {needsPlace
               ? `Remark added. Add the ${displayLabel} details, then tap Check In. HR will see this flag.`
               : 'Remark added. Tap Check In to continue. HR will see this flag.'}
           </p>

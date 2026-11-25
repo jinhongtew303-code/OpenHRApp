@@ -6,6 +6,7 @@ import { DashboardHeader } from './DashboardHeader';
 import { DashboardStats } from './DashboardStats';
 import { WorkdayTodayCard } from './WorkdayTodayCard';
 import { LocationTodayCard } from './LocationTodayCard';
+import { MileageCard } from './MileageCard';
 import { AdFrame } from '../ads/AdBanner';
 
 interface Props {
@@ -16,6 +17,13 @@ interface Props {
 }
 
 export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate, onRefresh }) => {
+  // The open session for the break card. `activeShift` (from the frozen
+  // reconcile path) has the correct id but raw ISO times and no break fields;
+  // the matching row in `myTodayAttendance` has HH:MM times + break_start/end,
+  // so prefer it for display while keeping the same id for the break action.
+  const todayShift = data.activeShift
+    ? (data.myTodayAttendance.find(a => String(a.id) === String(data.activeShift!.id)) ?? data.activeShift)
+    : undefined;
   return (
     <div className="space-y-4 md:space-y-6 animate-in fade-in duration-700">
       <DashboardHeader
@@ -27,11 +35,15 @@ export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate
       />
 
       {!isLoading && (
-        <WorkdayTodayCard shift={data.activeShift} appConfig={data.appConfig} onChanged={() => onRefresh?.()} />
+        <WorkdayTodayCard shift={todayShift} appConfig={data.appConfig} onChanged={() => onRefresh?.()} />
       )}
 
       {!isLoading && (
         <LocationTodayCard punches={data.myTodayAttendance} />
+      )}
+
+      {!isLoading && (
+        <MileageCard employeeId={data.freshUser.id} employeeName={data.freshUser.name} />
       )}
 
       <DashboardStats

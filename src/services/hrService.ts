@@ -9,6 +9,7 @@ import { reviewService } from './review.service';
 import { announcementService } from './announcement.service';
 import { notificationService } from './notification.service';
 import { superAdminService } from './superadmin.service';
+import { mileageService } from './mileage.service';
 import { apiClient } from './api.client';
 
 export const hrService = {
@@ -43,6 +44,13 @@ export const hrService = {
   deleteAttendance: attendanceService.deleteAttendance,
   startBreak: attendanceService.startBreak,
   endBreak: attendanceService.endBreak,
+
+  // Mileage (own-car trips)
+  getTodayMileage: mileageService.getToday,
+  listMileage: mileageService.list,
+  startMileageTrip: mileageService.startTrip,
+  endMileageTrip: mileageService.endTrip,
+  deleteMileageTrip: mileageService.deleteTrip,
   retryPendingSelfies: attendanceService.retryPendingSelfies,
   drainCheckInQueue: attendanceService.drainCheckInQueue,
 
