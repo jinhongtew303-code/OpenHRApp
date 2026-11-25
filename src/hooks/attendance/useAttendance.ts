@@ -5,21 +5,14 @@ import { Attendance, AppConfig, Shift } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import { mergeCheckOutRemarks } from '../../utils/attendanceUtils';
 
-interface UseAttendanceOptions {
-  /** After a check-in, stay open so the page can show the rewards celebration (it closes itself). */
-  holdOpenAfterCheckIn?: boolean;
-}
-
-export const useAttendance = (user: any, onFinish?: () => void, options: UseAttendanceOptions = {}) => {
+export const useAttendance = (user: any, onFinish?: () => void) => {
   const { showToast } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeRecord, setActiveRecord] = useState<Attendance | undefined>(undefined);
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [employeeShift, setEmployeeShift] = useState<Shift | null>(null);
-  const [isRosteredOff, setIsRosteredOff] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
-  const [lastPunch, setLastPunch] = useState<'IN' | 'OUT' | null>(null);
 
   // Clock Timer
   useEffect(() => {
@@ -43,7 +36,7 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
       const [reconciled, config, shift] = await Promise.all([
         hrService.getActiveAttendanceWithReconciliation(user.id),
         hrService.getConfig(),
-        hrService.resolveShiftForDay(user.id, user.shiftId),
+        hrService.resolveShiftForEmployee(user.id, user.shiftId),
       ]);
 
       const { active, closedPast } = reconciled;
@@ -54,8 +47,7 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
         setActiveRecord(active);
       }
       setAppConfig(config);
-      setEmployeeShift(shift.shift);
-      setIsRosteredOff(shift.isOff);
+      setEmployeeShift(shift);
 
       // If the workday session manager just closed any past-date sessions
       // as a client-side fallback, surface a one-time, human-readable toast.
@@ -91,8 +83,7 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
       const punchTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
       const today = new Date().toISOString().split('T')[0];
 
-      const isClockOut = !!activeRecord && !activeRecord.checkOut;
-      if (isClockOut) {
+      if (activeRecord && !activeRecord.checkOut) {
         // Clock Out
         await hrService.updateAttendance(activeRecord.id, {
           checkOut: punchTime,
@@ -103,12 +94,11 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
         let punchStatus: Attendance['status'] = 'PRESENT';
         
         // Late Calculation Logic (Strict Mode Enforced)
+        // Priority: employee shift > global appConfig
         const shiftStart = employeeShift?.startTime || appConfig?.officeStartTime;
         const shiftGrace = employeeShift?.lateGracePeriod ?? appConfig?.lateGracePeriod ?? 0;
 
-        // Priority: roster entry for today > employee shift > global appConfig.
-        // A rostered day off is never marked late.
-        if (dutyType === 'OFFICE' && shiftStart && !isRosteredOff) {
+        if (dutyType === 'OFFICE' && shiftStart) {
           const [pH, pM] = punchTime.split(':').map(Number);
           const [sH, sM] = shiftStart.split(':').map(Number);
 
@@ -136,16 +126,13 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
         });
       }
       
-      setLastPunch(isClockOut ? 'OUT' : 'IN');
       setStatus('success');
       await refreshData();
-
-      // Auto-close after success (a check-in with the celebration closes from there)
-      if (isClockOut || !options.holdOpenAfterCheckIn) {
-        setTimeout(() => {
-          if (onFinish) onFinish();
-        }, 1500);
-      }
+      
+      // Auto-close after success
+      setTimeout(() => {
+        if (onFinish) onFinish();
+      }, 1500);
 
     } catch (err) {
       console.error(err);
@@ -160,7 +147,6 @@ export const useAttendance = (user: any, onFinish?: () => void, options: UseAtte
     appConfig,
     isLoading,
     status,
-    lastPunch,
     submitPunch
   };
 };

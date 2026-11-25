@@ -146,7 +146,7 @@ const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ user, viewMode = 'MY', 
 
     // Resolve per-employee shift for this log's employee
     const emp = employees.find(e => e.id === log.employeeId);
-    const { shift } = await hrService.resolveShiftForDay(log.employeeId, emp?.shiftId, log.date);
+    const shift = await hrService.resolveShiftForEmployee(log.employeeId, emp?.shiftId, log.date);
 
     // Initialize Temp Shift: per-employee shift > global config
     setTempShift({
