@@ -22,6 +22,7 @@ export const changelog: ChangelogRelease[] = [
       { type: 'feature', description: 'Check-in now offers a third location, "Outside" (外勤), next to Office and Factory — for work at any site that is neither. Like Factory it asks for the place name in the remarks. The boss can rename all three labels under Organization settings.' },
       { type: 'feature', description: 'Language switch (English / 中文) in System & Profile, available to every role and saved per device. It covers the employee-facing screens the PA uses most — the Home punch cards, the bottom navigation and the Profile page.' },
       { type: 'fix', description: 'Fixed "外出午休 Start Break" failing with "操作失败，请重试": the new break columns were not yet in the API schema cache, and the Home card was reading the break state from a source that did not carry it. The break now records and shows correctly, and the check-in time on the card shows as HH:mm instead of a raw timestamp.' },
+      { type: 'improvement', description: 'Kept the employee (PA) app minimal: Rewards and Roster are hidden from the employee/manager menu and the mobile bottom bar, and the rewards streak card is removed from the employee Home. Rewards and Roster remain available to ADMIN/HR.' },
     ],
   },
   {
