@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Users, MapPin, Car, AlertTriangle, List, CalendarDays,
   BarChart3, Building2, Circle, CheckCircle2, Clock, ArrowRight,
@@ -7,11 +7,13 @@ import {
 import { DashboardData } from '../../hooks/dashboard/useDashboard';
 import { Attendance } from '../../types';
 import { AdFrame } from '../ads/AdBanner';
+import { TeamMap, TeamMapPoint } from './TeamMap';
 
 interface Props {
   data: DashboardData;
   isLoading: boolean;
   onNavigate: (path: string, params?: any) => void;
+  onRefresh?: () => void;
 }
 
 // "HH:mm" (or "HH:mm:ss") → minutes since midnight. Null if unparseable.
@@ -25,7 +27,15 @@ const toMinutes = (hhmm?: string): number | null => {
 const cleanRemarks = (r?: string) =>
   (r || '').replace(/\[(OFFICE|FACTORY|OUTSIDE|NO_LOCATION)\]/g, '').trim();
 
-export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate }) => {
+export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate, onRefresh }) => {
+  // Refresh the board every 30 minutes so new check-ins / locations appear
+  // without the boss reopening the app.
+  useEffect(() => {
+    if (!onRefresh) return;
+    const id = setInterval(onRefresh, 30 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [onRefresh]);
+
   const cfg = data.appConfig;
   const emps = data.allEmployees || [];
   const today = data.todayAttendance || [];
@@ -87,6 +97,32 @@ export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate })
   const lateCount = rows.filter(r => r.late).length;
   const mileTotal = mileage.reduce((s, m) => s + (m.distance || 0), 0);
 
+  // Map pins: each employee's location-tagged check-ins today → latest pin +
+  // today's route. Location is only captured at check-in.
+  const mapByEmp = new Map<string, Attendance[]>();
+  today.forEach(a => {
+    if (!a.checkIn || !a.location || (a.location.lat === 0 && a.location.lng === 0)) return;
+    const arr = mapByEmp.get(a.employeeId) || [];
+    arr.push(a);
+    mapByEmp.set(a.employeeId, arr);
+  });
+  const mapPoints: TeamMapPoint[] = Array.from(mapByEmp.entries()).map(([empId, ps]) => {
+    ps.sort((a, b) => (a.checkIn || '').localeCompare(b.checkIn || ''));
+    const route = ps.map(p => ({ lat: p.location!.lat, lng: p.location!.lng, time: p.checkIn }));
+    const last = route[route.length - 1];
+    const r = rows.find(x => x.empId === empId);
+    return {
+      empId,
+      name: nameOf(empId, ps[ps.length - 1].employeeName),
+      lat: last.lat,
+      lng: last.lng,
+      time: last.time,
+      working: r?.working,
+      late: r?.late,
+      route,
+    };
+  });
+
   // Active employees (excluding the boss themselves) who have no punch today.
   const notIn = emps.filter(e =>
     e.status === 'ACTIVE' && e.id !== data.freshUser.id && !byEmp.has(e.id));
@@ -147,6 +183,9 @@ export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate })
           </button>
         ))}
       </div>
+
+      {/* Team map — where each person last checked in today */}
+      {!isLoading && <TeamMap points={mapPoints} />}
 
       {/* Who's in today */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">

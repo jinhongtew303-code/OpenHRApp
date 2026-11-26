@@ -39,7 +39,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
   const isManager = user.role === 'MANAGER';
 
   if (isAdmin) {
-    return <AdminDashboard data={data} isLoading={isLoading} onNavigate={onNavigate} />;
+    return <AdminDashboard data={data} isLoading={isLoading} onNavigate={onNavigate} onRefresh={refetch} />;
   }
 
   if (isManager) {
