@@ -26,6 +26,10 @@ export const AttendanceActions: React.FC<Props> = ({
   // Factory and Outside both require a place name/details in the remarks.
   const needsPlace = dutyType === 'FACTORY' || dutyType === 'OUTSIDE';
   const remarksRequired = needsPlace || !!withoutLocation;
+  // Check-in (not check-out) with Factory/Outside and no place typed yet: the
+  // submit button is disabled, so the tap gives no feedback. Show why, and
+  // highlight the field, so it is obvious what is still needed.
+  const showPlaceHint = needsPlace && !activeRecord && !remarks.trim();
   const remarksPlaceholder = withoutLocation
     ? (needsPlace ? `${displayLabel} name & why no location...` : 'Why is your location not available?')
     : (needsPlace ? `${displayLabel} name & details...` : 'Optional remarks...');
@@ -75,14 +79,23 @@ export const AttendanceActions: React.FC<Props> = ({
         <input
           type="text"
           placeholder={remarksPlaceholder}
-          className={`w-full px-6 py-3.5 bg-white border rounded-2xl text-slate-700 text-xs font-bold placeholder:text-slate-300 outline-none shadow-sm transition-all ${remarksRequired && !remarks ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-100'}`}
+          className={`w-full px-6 py-3.5 bg-white border-2 rounded-2xl text-slate-700 text-xs font-bold placeholder:text-slate-300 outline-none shadow-sm transition-all ${showPlaceHint ? 'border-amber-400 bg-amber-50/40 ring-4 ring-amber-100' : remarksRequired && !remarks ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-100'}`}
           value={remarks}
           onChange={e => setRemarks(e.target.value)}
         />
       </div>
 
+      {showPlaceHint && (
+        <div className="w-full max-w-[320px] flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-800">
+          <AlertCircle size={16} className="shrink-0" />
+          <span className="text-xs font-bold leading-snug">
+            先填上面的{displayLabel}地点才能打卡 · Enter the {displayLabel} location above to check in
+          </span>
+        </div>
+      )}
+
       <div className="w-full max-w-[320px]">
-        <button 
+        <button
           onClick={onSubmit}
           disabled={isDisabled}
           className={`w-full py-4 rounded-2xl font-semibold uppercase tracking-[0.1em] text-[20px] shadow-xl shadow-primary-light transition-all active:scale-95 flex items-center justify-center gap-3 text-white disabled:opacity-20 bg-primary hover:bg-primary-hover`}
