@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, ArrowLeft, Save, RefreshCw, Mail, UserCheck, Hash, Lock, Key, Eye, EyeOff,
-  Clock, Users
+  Clock, Users, LogOut
 } from 'lucide-react';
 import { hrService } from '../services/hrService';
+import { useAuth } from '../context/AuthContext';
 import { User as UserType, Employee, Shift } from '../types';
 import { ThemeSelector } from '../components/settings/ThemeSelector';
 import { LanguageSelector } from '../components/settings/LanguageSelector';
@@ -46,6 +47,7 @@ const ProfileSkeleton = () => (
 
 const Settings: React.FC<SettingsProps> = ({ user, onBack }) => {
   const { showToast } = useToast();
+  const { logout } = useAuth();
   const [profile, setProfile] = useState<Partial<Employee> & { managerName?: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -300,6 +302,17 @@ const Settings: React.FC<SettingsProps> = ({ user, onBack }) => {
 
       {/* Re-enable Setup Guide (only shown if dismissed) */}
       <ReEnableSetupGuide userRole={user.role} />
+
+      {/* Sign Out — the mobile sidebar is hidden for staff, so this is their
+          way out of the app. */}
+      <div className="max-w-3xl">
+        <button
+          onClick={logout}
+          className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-rose-100 text-rose-600 rounded-2xl font-semibold text-sm uppercase tracking-widest shadow-sm hover:bg-rose-50 transition-all active:scale-[0.99]"
+        >
+          <LogOut size={18} /> Sign Out
+        </button>
+      </div>
 
       <AdFrame placement="settings" className="mt-6" />
     </div>

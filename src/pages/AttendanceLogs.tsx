@@ -3,10 +3,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Clock, MapPin, History, Search, RefreshCw, ChevronRight, ExternalLink,
   Camera, X, SortAsc, SortDesc, Users, Building, Trash2, Save,
-  Calculator, UserX, Download
+  Calculator, UserX, Download, Car
 } from 'lucide-react';
 import { hrService } from '../services/hrService';
-import { Attendance, Employee, AppConfig } from '../types';
+import { Attendance, Employee, AppConfig, MileageLog } from '../types';
 import { consolidateAttendance, calculatePunctuality, calculateDuration, isNoLocationRecord } from '../utils/attendanceUtils';
 import { exportAttendanceToXlsx } from '../utils/exportAttendance';
 import HelpButton from '../components/onboarding/HelpButton';
@@ -42,6 +42,7 @@ const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ user, viewMode = 'MY', 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [config, setConfig] = useState<AppConfig | null>(null);
+  const [mileage, setMileage] = useState<MileageLog[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,14 +75,18 @@ const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ user, viewMode = 'MY', 
         ? { since: sinceYearAgo, maxRows: 10000 }
         : { since: sinceYearAgo, employeeId: user.id, maxRows: 2000 };
 
-      const [allAttendance, fetchedEmployees, depts, appConfig] = await Promise.all([
+      const [allAttendance, fetchedEmployees, depts, appConfig, trips] = await Promise.all([
         hrService.getAttendance(attendanceScope),
         hrService.getEmployees(),
         hrService.getDepartments(),
-        hrService.getConfig()
+        hrService.getConfig(),
+        // Mileage claimed over the same window (RLS-scoped: own trips for a
+        // staff member, the whole org for a boss) so each day row can show km.
+        hrService.listMileage({ since: sinceYearAgo })
       ]);
 
       setConfig(appConfig);
+      setMileage(trips || []);
 
       if (isAuditMode) {
         if (isAdmin) {
@@ -260,6 +265,18 @@ const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ user, viewMode = 'MY', 
     });
   }, [logs, searchTerm, employeeFilter, deptFilter, sortOrder, isAuditMode, employees]);
 
+  // Total km claimed per employee per day (completed trips only), so each
+  // workday row can show the mileage claimed that day.
+  const mileageByDay = useMemo(() => {
+    const m = new Map<string, number>();
+    mileage.forEach(t => {
+      if (t.distance == null) return;
+      const k = `${t.employeeId}|${t.date}`;
+      m.set(k, (m.get(k) || 0) + t.distance);
+    });
+    return m;
+  }, [mileage]);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -422,6 +439,15 @@ const AttendanceLogs: React.FC<AttendanceLogsProps> = ({ user, viewMode = 'MY', 
                         <MapPin size={12} className="text-rose-500" />
                         <span className="text-[10px] font-semibold uppercase tracking-tight truncate">{log.location?.address || 'Unknown'}</span>
                       </div>
+                      {(() => {
+                        const km = mileageByDay.get(`${log.employeeId}|${log.date}`);
+                        return km ? (
+                          <div className="flex items-center gap-1.5 text-indigo-600">
+                            <Car size={12} />
+                            <span className="text-[10px] font-semibold uppercase tracking-tight">{km} km</span>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                 </div>

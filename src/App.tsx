@@ -19,9 +19,8 @@ import { supabase } from './services/supabase';
 import { sessionManager } from './services/session/sessionManager';
 import { User } from './types';
 
-// Eager: the two pages most launches show first.
+// Eager: the page every launch shows first.
 import Login from './pages/Login';
-import LandingPage from './pages/LandingPage';
 import { VerifyAccount } from './pages/VerifyAccount';
 import { ResetPassword } from './pages/ResetPassword';
 import { SuspendedPage } from './components/subscription';
@@ -138,8 +137,10 @@ const AppContent: React.FC = () => {
   useEffect(() => { if (!user) setViewAsUser(null); }, [user]);
 
   // Public Pages State
-  // __heroIntent: a tap on the static hero in index.html before React mounted.
-  const [showLanding, setShowLanding] = useState(() => !(window as any).__heroIntent);
+  // This is a private, single-company deployment: there is no marketing site,
+  // so an unauthenticated visitor lands straight on the Login screen. (The
+  // LandingPage component is kept for reference but no longer shown.)
+  const [showLanding, setShowLanding] = useState(false);
   const [showRegister, setShowRegister] = useState(() => (window as any).__heroIntent === 'register');
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -646,18 +647,10 @@ const AppContent: React.FC = () => {
   // Priority 2: Public Landing/Login/Register
   if (!user) {
     if (showRegister) {
-      return <RegisterOrganization onBack={() => { setShowRegister(false); setShowLanding(true); }} onSuccess={login} />;
+      return <RegisterOrganization onBack={() => { setShowRegister(false); setShowLanding(false); }} onSuccess={login} />;
     }
-    if (!showLanding) {
-      return <Login onLoginSuccess={login} onRegisterClick={() => setShowRegister(true)} onBackToLanding={() => setShowLanding(true)} />;
-    }
-    return (
-      <LandingPage
-        onLoginClick={() => setShowLanding(false)}
-        onRegisterClick={() => { setShowLanding(false); setShowRegister(true); }}
-        onLoginSuccess={login}
-      />
-    );
+    // No marketing landing page in this private deployment — straight to Login.
+    return <Login onLoginSuccess={login} onRegisterClick={() => setShowRegister(true)} />;
   }
 
   // Check if Super Admin

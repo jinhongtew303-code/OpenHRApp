@@ -76,12 +76,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
         {/* Header */}
         <header className="h-20 bg-white border-b border-slate-50 flex items-center justify-between gap-2 px-4 sm:px-6 md:px-10 sticky top-0 z-40">
            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 -ml-2 text-slate-500 md:hidden hover:bg-slate-50 rounded-xl transition-all flex-shrink-0"
-              >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
+              {/* Staff use the bottom nav + Account page (which has Sign Out);
+                  only the boss needs the full sidebar on mobile. */}
+              {isAdmin && (
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="p-2 -ml-2 text-slate-500 md:hidden hover:bg-slate-50 rounded-xl transition-all flex-shrink-0"
+                >
+                  {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+              )}
 
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                  <div className="p-1.5 bg-white rounded-xl border border-primary/20 shadow-sm overflow-hidden md:hidden flex-shrink-0">
