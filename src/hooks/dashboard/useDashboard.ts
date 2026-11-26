@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { hrService } from '../../services/hrService';
-import { Employee, Attendance, LeaveBalance, Holiday, Team, AppConfig, LeaveWorkflow, CustomLeaveType } from '../../types';
+import { Employee, Attendance, LeaveBalance, Holiday, Team, AppConfig, LeaveWorkflow, CustomLeaveType, MileageLog } from '../../types';
 import { DEFAULT_LEAVE_TYPES } from '../../constants';
 
 export interface DashboardData {
@@ -20,6 +20,12 @@ export interface DashboardData {
   leaveTypes: CustomLeaveType[];
   /** Today's own punches (for the employee's location card: office → site → back). */
   myTodayAttendance: Attendance[];
+  /** All of today's org punches (admin board: who's in, where, who's late). Empty for non-admins. */
+  todayAttendance: Attendance[];
+  /** Full employee list (admin board: shows who hasn't checked in). Empty for non-admins. */
+  allEmployees: Employee[];
+  /** Today's mileage trips org-wide (admin board). Empty for non-admins. */
+  todayMileage: MileageLog[];
 }
 
 export const useDashboard = (user: any) => {
@@ -41,7 +47,7 @@ export const useDashboard = (user: any) => {
         // to filter down to ~today's <N>. Server-side filter is keyed by the
         // `date` column and the 2-min cache key is query-scoped, so this
         // coexists with wider queries from Reports / AttendanceLogs.
-        const [active, balance, emps, leaves, hols, atts, teams, config, wfs, leaveTypes] = await Promise.all([
+        const [active, balance, emps, leaves, hols, atts, teams, config, wfs, leaveTypes, milTrips] = await Promise.all([
           hrService.getActiveAttendance(user.id),
           hrService.getLeaveBalance(user.id),
           hrService.getEmployees(),
@@ -51,7 +57,9 @@ export const useDashboard = (user: any) => {
           hrService.getTeams(),
           hrService.getConfig(),
           hrService.getWorkflows(),
-          hrService.getLeaveTypes()
+          hrService.getLeaveTypes(),
+          // Admin board only: today's mileage claims. Skip the query for others.
+          isAdmin ? hrService.listMileage({ since: today, until: today }) : Promise.resolve([] as MileageLog[])
         ]);
 
         // CRITICAL: Find fresh user record
@@ -121,6 +129,9 @@ export const useDashboard = (user: any) => {
           approverLabel,
           leaveTypes: leaveTypes || DEFAULT_LEAVE_TYPES,
           myTodayAttendance,
+          todayAttendance: isAdmin ? atts.filter(a => a.date === today) : [],
+          allEmployees: isAdmin ? emps : [],
+          todayMileage: milTrips || [],
         });
 
       } catch (err) {

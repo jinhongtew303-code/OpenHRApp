@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { ShieldCheck, Plus, Users, List, CalendarDays, Network, BarChart3, Settings, History, UserCircle } from 'lucide-react';
+import {
+  Users, MapPin, Car, AlertTriangle, List, CalendarDays,
+  BarChart3, Building2, Circle, CheckCircle2, Clock, ArrowRight,
+} from 'lucide-react';
 import { DashboardData } from '../../hooks/dashboard/useDashboard';
-import { DashboardHeader } from './DashboardHeader';
-import { DashboardStats } from './DashboardStats';
-import { AnnouncementWidget } from './AnnouncementWidget';
-import SetupChecklist from '../onboarding/SetupChecklist';
+import { Attendance } from '../../types';
 import { AdFrame } from '../ads/AdBanner';
 
 interface Props {
@@ -14,156 +14,250 @@ interface Props {
   onNavigate: (path: string, params?: any) => void;
 }
 
+// "HH:mm" (or "HH:mm:ss") → minutes since midnight. Null if unparseable.
+const toMinutes = (hhmm?: string): number | null => {
+  if (!hhmm) return null;
+  const m = hhmm.match(/^(\d{1,2}):(\d{2})/);
+  return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : null;
+};
+
+// Remove the internal [FACTORY]/[OUTSIDE]/[NO_LOCATION] tags for display.
+const cleanRemarks = (r?: string) =>
+  (r || '').replace(/\[(OFFICE|FACTORY|OUTSIDE|NO_LOCATION)\]/g, '').trim();
+
 export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate }) => {
-  const balanceTypes = data.leaveTypes?.filter(t => t.hasBalance) || [];
-  const totalRemaining = balanceTypes.reduce((sum, t) => sum + ((data.userBalance?.[t.id] as number) || 0), 0);
+  const cfg = data.appConfig;
+  const emps = data.allEmployees || [];
+  const today = data.todayAttendance || [];
+  const mileage = data.todayMileage || [];
+
+  const todayLabel = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
+
+  const nameOf = (id: string, fallback?: string) =>
+    emps.find(e => e.id === id)?.name || fallback || 'Unknown';
+
+  const dutyLabel = (d?: string) =>
+    d === 'FACTORY' ? (cfg?.dutyLabel2 || 'Factory')
+      : d === 'OUTSIDE' ? (cfg?.dutyLabel3 || 'Outside')
+        : (cfg?.dutyLabel1 || 'Office');
+
+  // Late = record flagged LATE, or check-in later than office start + grace.
+  const lateCutoff = (() => {
+    const start = toMinutes(cfg?.officeStartTime);
+    return start == null ? null : start + (cfg?.lateGracePeriod || 0);
+  })();
+  const punchIsLate = (a: Attendance) => {
+    if (a.status === 'LATE') return true;
+    if (lateCutoff == null) return false;
+    const ci = toMinutes(a.checkIn);
+    return ci != null && ci > lateCutoff;
+  };
+
+  // One row per employee who punched today (an employee can have several punches).
+  const byEmp = new Map<string, Attendance[]>();
+  today.forEach(a => {
+    if (!a.checkIn && !a.checkOut) return;
+    const arr = byEmp.get(a.employeeId) || [];
+    arr.push(a);
+    byEmp.set(a.employeeId, arr);
+  });
+
+  const rows = Array.from(byEmp.entries()).map(([empId, punches]) => {
+    punches.sort((a, b) => (a.checkIn || '').localeCompare(b.checkIn || ''));
+    const openPunch = punches.find(p => p.checkIn && !p.checkOut);
+    const ref = openPunch || punches[punches.length - 1];
+    const lastOut = [...punches].reverse().find(p => p.checkOut)?.checkOut;
+    return {
+      empId,
+      name: nameOf(empId, ref.employeeName),
+      working: !!openPunch,
+      firstIn: punches[0]?.checkIn,
+      lastOut,
+      late: punches.some(punchIsLate),
+      duty: ref.dutyType,
+      place: cleanRemarks(ref.remarks),
+      location: ref.location,
+    };
+  }).sort((a, b) =>
+    Number(b.working) - Number(a.working) || (a.firstIn || '').localeCompare(b.firstIn || ''));
+
+  const workingCount = rows.filter(r => r.working).length;
+  const lateCount = rows.filter(r => r.late).length;
+  const mileTotal = mileage.reduce((s, m) => s + (m.distance || 0), 0);
+
+  // Active employees (excluding the boss themselves) who have no punch today.
+  const notIn = emps.filter(e =>
+    e.status === 'ACTIVE' && e.id !== data.freshUser.id && !byEmp.has(e.id));
+
+  const stats = [
+    { label: 'Working now', value: workingCount, icon: Circle, tone: 'text-emerald-600 bg-emerald-50' },
+    { label: 'Checked in', value: rows.length, icon: CheckCircle2, tone: 'text-primary bg-primary-light' },
+    { label: 'Late', value: lateCount, icon: AlertTriangle, tone: 'text-amber-600 bg-amber-50' },
+    { label: 'Mileage (km)', value: mileTotal, icon: Car, tone: 'text-indigo-600 bg-indigo-50' },
+  ];
+
+  const quick = [
+    { id: 'attendance-audit', label: 'Audit', icon: List },
+    { id: 'leave', label: 'Leave', icon: CalendarDays },
+    { id: 'mileage', label: 'Mileage', icon: Car },
+    { id: 'employees', label: 'Team', icon: Users },
+    { id: 'reports', label: 'Reports', icon: BarChart3 },
+  ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700">
-      <DashboardHeader 
-        user={data.freshUser} 
-        activeShift={data.activeShift} 
-        appConfig={data.appConfig} 
-        isLoading={isLoading}
-        onNavigate={onNavigate} 
-      />
-
-      <DashboardStats
-        leaveUsed={data.leaveUsed}
-        upcomingHoliday={data.upcomingHoliday}
-        isLoading={isLoading}
-      />
-
-      {/* Setup Checklist for Admins */}
-      <SetupChecklist user={data.freshUser} onNavigate={onNavigate} />
-
-      {!isLoading && <AdFrame placement="team_dashboards" />}
-
-      {/* Quick Access Tabs */}
-      <div className="space-y-2">
-        {/* Row 1 — Management */}
-        <div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 px-1">Management</p>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 p-1 bg-slate-100 rounded-xl">
-            <button
-              onClick={() => onNavigate('attendance-audit')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <List size={16} /> <span className="truncate">Audit</span>
-            </button>
-            <button
-              onClick={() => onNavigate('leave')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <CalendarDays size={16} /> <span className="truncate">Leave</span>
-            </button>
-            <button
-              onClick={() => onNavigate('employees')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <Users size={16} /> <span className="truncate">Directory</span>
-            </button>
-            <button
-              onClick={() => onNavigate('organization')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <Network size={16} /> <span className="truncate">Org</span>
-            </button>
-            <button
-              onClick={() => onNavigate('reports')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <BarChart3 size={16} /> <span className="truncate">Reports</span>
-            </button>
+    <div className="space-y-5 animate-in fade-in duration-700">
+      {/* Header — no check-in buttons for the boss */}
+      <header>
+        {cfg?.companyName && (
+          <div className="flex items-center gap-2 mb-1">
+            <Building2 size={12} className="text-primary" />
+            <p className="text-[10px] font-semibold text-primary uppercase tracking-[0.2em]">{cfg.companyName}</p>
           </div>
-        </div>
-        {/* Row 2 — Personal */}
-        <div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 px-1">Personal</p>
-          <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-xl">
-            <button
-              onClick={() => onNavigate('attendance-logs')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <History size={16} /> <span className="truncate">Attendance</span>
-            </button>
-            <button
-              onClick={() => onNavigate('profile')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <UserCircle size={16} /> <span className="truncate">Profile</span>
-            </button>
-            <button
-              onClick={() => onNavigate('settings')}
-              className="py-3 px-2 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1.5 text-slate-500 hover:text-slate-700 hover:bg-white"
-            >
-              <Settings size={16} /> <span className="truncate">Settings</span>
-            </button>
+        )}
+        <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 tracking-tight">
+          {data.freshUser.name}
+        </h1>
+        <p className="text-xs font-bold text-slate-400 mt-0.5">{todayLabel}</p>
+      </header>
+
+      {/* Live stat tiles */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {stats.map(s => (
+          <div key={s.label} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${s.tone}`}>
+              <s.icon size={16} />
+            </div>
+            <p className="text-2xl font-semibold text-slate-900 tabular-nums leading-none">{s.value}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{s.label}</p>
           </div>
-        </div>
+        ))}
       </div>
 
-      {!isLoading && (
-        <>
-          {/* Leave Allocation Card - Identical to Manager for now, but separated for future extensibility */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-xl overflow-hidden animate-in slide-in-from-bottom-4">
-            <div className="bg-primary p-8 pb-12 relative overflow-hidden flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-white tracking-tight mt-4">Leave Allocation</h2>
-              <ShieldCheck className="text-white/20 absolute -right-4 -bottom-4 w-32 h-32" />
-            </div>
-            
-            <div className="px-8 -mt-6">
-              <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-lg space-y-8">
-                <div className="flex justify-around items-center divide-x divide-slate-100">
-                  {balanceTypes.map(lt => (
-                    <div key={lt.id} className="text-center flex-1">
-                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">{lt.name.replace(' Leave', '')}</p>
-                      <p className="text-2xl font-semibold text-primary">{(data.userBalance?.[lt.id] as number) || 0}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="text-center text-sm text-slate-500 font-medium">
-                  You have <span className="font-semibold text-slate-900">{totalRemaining} total days</span> remaining for the current fiscal year.
-                </p>
-
-                <button 
-                  onClick={() => onNavigate('leave', { autoOpen: true })}
-                  className="w-full py-5 bg-primary text-white rounded-2xl font-semibold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-xl shadow-primary-light hover:bg-primary-hover transition-all active:scale-95"
-                >
-                  <Plus size={18} /> Apply for Leave
-                </button>
-              </div>
-            </div>
-            <div className="h-6"></div>
-          </div>
-
-          {/* Org Directory Shortcut */}
-          <div 
-            className={`bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between transition-all cursor-pointer hover:bg-slate-50`} 
-            onClick={() => onNavigate('employees')}
+      {/* Quick access */}
+      <div className="grid grid-cols-5 gap-2 p-1 bg-slate-100 rounded-xl">
+        {quick.map(q => (
+          <button
+            key={q.id}
+            onClick={() => onNavigate(q.id)}
+            className="py-3 px-1 rounded-lg font-bold text-[11px] transition-all flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-primary hover:bg-white"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                <Users size={24} />
-              </div>
-              <div>
-                <h4 className="font-semibold text-slate-900 leading-none">Global Directory</h4>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
-                  Organization-wide
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-semibold text-emerald-600">{data.activeTeamMembers} Active</p>
-              <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Out of {data.teamMembersCount}</p>
-            </div>
-          </div>
+            <q.icon size={16} /> <span className="truncate">{q.label}</span>
+          </button>
+        ))}
+      </div>
 
-          {/* Announcements Widget */}
-          <AnnouncementWidget user={data.freshUser} onNavigate={onNavigate} />
-        </>
-      )}
+      {/* Who's in today */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-primary-light rounded-lg text-primary"><Users size={14} /></div>
+            <h3 className="font-semibold text-sm text-slate-900">Who's in today</h3>
+          </div>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            {rows.length} / {emps.length}
+          </span>
+        </div>
+
+        {isLoading ? (
+          <div className="p-5 text-center text-xs text-slate-400">Loading…</div>
+        ) : rows.length === 0 ? (
+          <div className="p-6 text-center text-xs text-slate-400">No one has checked in yet today.</div>
+        ) : (
+          <div className="divide-y divide-slate-50">
+            {rows.map(r => (
+              <div key={r.empId} className="flex items-center gap-3 px-5 py-3">
+                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${r.working ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-800 truncate">{r.name}</span>
+                    {r.late && (
+                      <span className="flex items-center gap-0.5 text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full uppercase">
+                        <Clock size={9} /> Late
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 truncate">
+                    {dutyLabel(r.duty)}{r.place ? ` · ${r.place}` : ''}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-[11px] font-bold text-slate-600 tabular-nums">
+                    {r.working ? `In ${r.firstIn || '—'}` : `${r.firstIn || '—'} – ${r.lastOut || '—'}`}
+                  </p>
+                  <p className={`text-[9px] font-bold uppercase tracking-wider ${r.working ? 'text-emerald-600' : 'text-slate-300'}`}>
+                    {r.working ? 'Working' : 'Done'}
+                  </p>
+                </div>
+                {r.location && (r.location.lat !== 0 || r.location.lng !== 0) && (
+                  <a
+                    href={`https://www.google.com/maps?q=${r.location.lat},${r.location.lng}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex-shrink-0 p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary-light transition-colors"
+                    title="Open location in Google Maps"
+                  >
+                    <MapPin size={14} />
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && notIn.length > 0 && (
+          <div className="px-5 py-3 bg-slate-50/60 border-t border-slate-50">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              Not checked in ({notIn.length})
+            </p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              {notIn.map(e => e.name).join(', ')}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Mileage claimed today */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <button
+          onClick={() => onNavigate('mileage')}
+          className="w-full flex items-center justify-between px-5 py-4 border-b border-slate-50 hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600"><Car size={14} /></div>
+            <h3 className="font-semibold text-sm text-slate-900">Mileage today</h3>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <span className="text-[11px] font-bold tabular-nums">{mileTotal} km</span>
+            <ArrowRight size={14} />
+          </div>
+        </button>
+
+        {mileage.length === 0 ? (
+          <div className="p-6 text-center text-xs text-slate-400">No mileage claims today.</div>
+        ) : (
+          <div className="divide-y divide-slate-50">
+            {mileage.map(m => (
+              <div key={m.id} className="flex items-center justify-between px-5 py-3">
+                <span className="text-sm font-semibold text-slate-800 truncate">
+                  {nameOf(m.employeeId, m.employeeName)}
+                </span>
+                {m.endReading != null && m.distance != null ? (
+                  <span className="text-[11px] font-bold text-indigo-600 tabular-nums">{m.distance} km</span>
+                ) : (
+                  <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase">
+                    In progress
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {!isLoading && <AdFrame placement="team_dashboards" />}
     </div>
   );
 };
+
+export default AdminDashboard;

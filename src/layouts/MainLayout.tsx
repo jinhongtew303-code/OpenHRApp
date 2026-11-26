@@ -34,6 +34,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
     setIsMobileMenuOpen(false);
   };
 
+  // The boss doesn't punch in, so their bottom-nav "attendance" tab opens the
+  // org-wide audit (everyone's punches) instead of their own empty history.
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'HR';
+  const attendanceTab = isAdmin ? 'attendance-audit' : 'attendance-logs';
+
   const handleLogout = async () => {
     await logout();
     onNavigate('dashboard'); // Reset path on logout
@@ -154,8 +159,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
             <LayoutDashboard size={20} className={currentPath === 'dashboard' ? 'scale-110' : ''} />
             <span className="text-[9px] font-semibold uppercase tracking-tighter">{t('nav.home')}</span>
           </button>
-          <button 
-            onClick={() => handleNavigate('attendance-logs')}
+          <button
+            onClick={() => handleNavigate(attendanceTab)}
             className={`flex flex-col items-center gap-1 transition-all ${currentPath === 'attendance-logs' || currentPath === 'attendance-audit' ? 'text-primary' : 'text-slate-400'}`}
           >
             <Clock size={20} className={currentPath === 'attendance-logs' || currentPath === 'attendance-audit' ? 'scale-110' : ''} />

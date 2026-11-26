@@ -13,8 +13,6 @@ import {
   List,
   History,
   Shield,
-  ClipboardCheck,
-  Megaphone,
   Bell,
   Target,
   Car,
@@ -43,17 +41,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath, onNavigate, onLogout, ro
   const regularMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
     { id: 'profile', label: 'My Profile', icon: UserCircle, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
-    { id: 'attendance-logs', label: 'My Attendance', icon: History, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
+    // The boss doesn't punch in, so "My Attendance" is for staff only.
+    { id: 'attendance-logs', label: 'My Attendance', icon: History, roles: ['MANAGER', 'EMPLOYEE'] },
     { id: 'attendance-audit', label: 'Attendance Audit', icon: List, roles: ['ADMIN', 'HR', 'MANAGER'] },
     { id: 'mileage', label: 'Mileage', icon: Car, roles: ['ADMIN', 'HR'] },
     { id: 'leave', label: 'Leave', icon: CalendarDays, roles: ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'] },
-    // Employees get a deliberately minimal app (4 tabs: Home, My Attendance,
-    // Leave, My Profile). Announcements/Performance stay for ADMIN/HR/MANAGER only.
-    { id: 'announcements', label: 'Announcements', icon: Megaphone, roles: ['ADMIN', 'HR', 'MANAGER'] },
     { id: 'admin-notifications', label: 'Notifications', icon: Bell, roles: ['ADMIN', 'HR'] },
     { id: 'employees', label: 'Team Directory', icon: Users, roles: ['ADMIN', 'HR', 'MANAGER'] },
-    { id: 'performance-review', label: 'Performance', icon: ClipboardCheck, roles: ['ADMIN', 'HR', 'MANAGER'] },
-    { id: 'organization', label: 'Organization', icon: Network, roles: ['ADMIN', 'HR'] },
+    // "Company Setup" holds holidays, leave quotas, departments, locations and
+    // the Office/Factory/Outside labels — the boss configures those here.
+    { id: 'organization', label: 'Company Setup', icon: Network, roles: ['ADMIN', 'HR'] },
     { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['ADMIN', 'HR'] },
     { id: 'settings', label: 'Settings', icon: Settings, roles: ['ADMIN', 'HR'] },
   ];

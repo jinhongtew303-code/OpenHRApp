@@ -15,6 +15,15 @@ export interface ChangelogRelease {
 
 export const changelog: ChangelogRelease[] = [
   {
+    date: '2026-11-26',
+    title: 'Boss dashboard rebuilt, trimmed boss menu, team leave balances',
+    entries: [
+      { type: 'feature', description: 'The boss (ADMIN) Home is now a live control board instead of an employee screen: tiles for Working now / Checked in / Late / Mileage today, a "Who\'s in today" list (working first, with late flags, duty + place, and a Google Maps pin per person plus a "Not checked in" line), and a "Mileage today" list. The check-in buttons, the setup checklist, the holiday/leave-used cards and the "Apply Leave" card are gone from the boss Home.' },
+      { type: 'feature', description: 'The boss Leave page now opens with a "Leave Balances" table — every active employee\'s remaining days per leave type at a glance — above the existing approve/reject and all-leaves tools.' },
+      { type: 'improvement', description: 'Trimmed the boss menu: removed "My Attendance" (the boss does not punch in), "Announcements" and "Performance"; renamed "Organization" to "Company Setup". On mobile the boss\'s bottom attendance tab now opens the org-wide Attendance Audit instead of an empty personal history. Staff menus are unchanged.' },
+    ],
+  },
+  {
     date: '2026-11-25',
     title: 'Mileage tracking, Outside check-in, language switch, break fix',
     entries: [

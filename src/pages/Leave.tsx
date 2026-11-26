@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { hrService } from '../services/hrService';
-import { LeaveRequest, LeaveBalance, Employee, Team } from '../types';
+import { LeaveRequest, LeaveBalance, Employee, Team, LeavePolicy, CustomLeaveType } from '../types';
 import { useSubscription } from '../context/SubscriptionContext';
 
 // New Modules
@@ -10,6 +10,7 @@ import { LeaveGuidelines } from '../components/leave/LeaveGuidelines';
 import EmployeeLeaveModule from '../components/leave/EmployeeLeaveModule';
 import ManagerialLeaveModule from '../components/leave/ManagerialLeaveModule';
 import { HRLeaveModule } from '../components/leave/HRLeaveModule';
+import { TeamLeaveBalances } from '../components/leave/TeamLeaveBalances';
 
 interface LeaveProps {
   user: any;
@@ -32,20 +33,27 @@ const Leave: React.FC<LeaveProps> = ({ user, autoOpen, openLeaveId }) => {
   // Managers need team membership to see their team's requests in every status.
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  // Admin-only: used to show every employee's remaining balance.
+  const [policy, setPolicy] = useState<LeavePolicy | null>(null);
+  const [leaveTypes, setLeaveTypes] = useState<CustomLeaveType[]>([]);
 
   const refreshData = async () => {
     try {
-      const [fetchedLeaves, userBalance, emps, tms] = await Promise.all([
+      const [fetchedLeaves, userBalance, emps, tms, pol, types] = await Promise.all([
         hrService.getLeaves(),
         hrService.getLeaveBalance(user.id),
         hrService.getEmployees(),
         hrService.getTeams(),
+        hrService.getLeavePolicy(),
+        hrService.getLeaveTypes(),
       ]);
       setLeaves(fetchedLeaves);
       setBalance(userBalance);
       setEmployees(emps);
       setTeams(tms);
-    } catch (e) { 
+      setPolicy(pol);
+      setLeaveTypes(types || []);
+    } catch (e) {
       console.error("Refresh failed", e); 
     } finally { 
       setIsInitializing(false); 
@@ -119,7 +127,14 @@ const Leave: React.FC<LeaveProps> = ({ user, autoOpen, openLeaveId }) => {
 
       {/* 4. HR/Admin Module (Compliance) */}
       {isAdmin && (
-        <div className="pt-12 border-t border-slate-100">
+        <div className="pt-12 border-t border-slate-100 space-y-10">
+          {/* Boss view: every employee's remaining balance at a glance */}
+          <TeamLeaveBalances
+            employees={employees}
+            requests={leaves}
+            policy={policy}
+            leaveTypes={leaveTypes}
+          />
           <HRLeaveModule
             user={user}
             requests={leaves}
