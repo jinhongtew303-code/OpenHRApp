@@ -28,11 +28,11 @@ const cleanRemarks = (r?: string) =>
   (r || '').replace(/\[(OFFICE|FACTORY|OUTSIDE|NO_LOCATION)\]/g, '').trim();
 
 export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate, onRefresh }) => {
-  // Refresh the board every 30 minutes so new check-ins / locations appear
-  // without the boss reopening the app.
+  // Refresh the board every 10 minutes so new check-ins and the staff's
+  // 30-minute location pings appear without the boss reopening the app.
   useEffect(() => {
     if (!onRefresh) return;
-    const id = setInterval(onRefresh, 30 * 60 * 1000);
+    const id = setInterval(onRefresh, 10 * 60 * 1000);
     return () => clearInterval(id);
   }, [onRefresh]);
 
@@ -97,23 +97,36 @@ export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate, o
   const lateCount = rows.filter(r => r.late).length;
   const mileTotal = mileage.reduce((s, m) => s + (m.distance || 0), 0);
 
-  // Map pins: each employee's location-tagged check-ins today → latest pin +
-  // today's route. Location is only captured at check-in.
-  const mapByEmp = new Map<string, Attendance[]>();
+  // Map pins: each employee's location-tagged check-ins today plus the
+  // 30-minute position pings sent while they're on duty → latest position +
+  // today's route, in time order.
+  type RoutePt = { lat: number; lng: number; time?: string; min: number };
+  const hhmmOf = (iso: string) => {
+    const d = new Date(iso);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+  const routeByEmp = new Map<string, RoutePt[]>();
+  const addPt = (empId: string, pt: RoutePt) => {
+    const arr = routeByEmp.get(empId) || [];
+    arr.push(pt);
+    routeByEmp.set(empId, arr);
+  };
   today.forEach(a => {
     if (!a.checkIn || !a.location || (a.location.lat === 0 && a.location.lng === 0)) return;
-    const arr = mapByEmp.get(a.employeeId) || [];
-    arr.push(a);
-    mapByEmp.set(a.employeeId, arr);
+    addPt(a.employeeId, { lat: a.location.lat, lng: a.location.lng, time: a.checkIn, min: toMinutes(a.checkIn) ?? 0 });
   });
-  const mapPoints: TeamMapPoint[] = Array.from(mapByEmp.entries()).map(([empId, ps]) => {
-    ps.sort((a, b) => (a.checkIn || '').localeCompare(b.checkIn || ''));
-    const route = ps.map(p => ({ lat: p.location!.lat, lng: p.location!.lng, time: p.checkIn }));
+  (data.todayPings || []).forEach(p => {
+    const t = hhmmOf(p.createdAt);
+    addPt(p.employeeId, { lat: p.lat, lng: p.lng, time: t, min: toMinutes(t) ?? 0 });
+  });
+  const mapPoints: TeamMapPoint[] = Array.from(routeByEmp.entries()).map(([empId, pts]) => {
+    pts.sort((a, b) => a.min - b.min);
+    const route = pts.map(({ lat, lng, time }) => ({ lat, lng, time }));
     const last = route[route.length - 1];
     const r = rows.find(x => x.empId === empId);
     return {
       empId,
-      name: nameOf(empId, ps[ps.length - 1].employeeName),
+      name: nameOf(empId),
       lat: last.lat,
       lng: last.lng,
       time: last.time,
@@ -122,6 +135,8 @@ export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate, o
       route,
     };
   });
+  // Latest known position per employee (for the Google Maps button below).
+  const latestPos = new Map(mapPoints.map(p => [p.empId, p]));
 
   // Active employees (excluding the boss themselves) who have no punch today.
   const notIn = emps.filter(e =>
@@ -229,14 +244,17 @@ export const AdminDashboard: React.FC<Props> = ({ data, isLoading, onNavigate, o
                     {r.working ? 'Working' : 'Done'}
                   </p>
                 </div>
-                {r.location && (r.location.lat !== 0 || r.location.lng !== 0) && (
+                {latestPos.has(r.empId) && (
                   <a
-                    href={`https://www.google.com/maps?q=${r.location.lat},${r.location.lng}`}
+                    href={`https://www.google.com/maps?q=${latestPos.get(r.empId)!.lat},${latestPos.get(r.empId)!.lng}`}
                     target="_blank" rel="noopener noreferrer"
-                    className="flex-shrink-0 p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary-light transition-colors"
-                    title="Open location in Google Maps"
+                    className="flex-shrink-0 flex flex-col items-center p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-primary hover:bg-primary-light transition-colors"
+                    title="Open latest location in Google Maps"
                   >
                     <MapPin size={14} />
+                    {latestPos.get(r.empId)!.time && (
+                      <span className="text-[8px] font-bold tabular-nums leading-none mt-0.5">{latestPos.get(r.empId)!.time}</span>
+                    )}
                   </a>
                 )}
               </div>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Network, User, Plus, ArrowRight } from 'lucide-react';
+import { Network, User, Plus, ArrowRight, MapPin } from 'lucide-react';
 import { DashboardData } from '../../hooks/dashboard/useDashboard';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardStats } from './DashboardStats';
@@ -36,6 +36,15 @@ export const EmployeeDashboard: React.FC<Props> = ({ data, isLoading, onNavigate
 
       {!isLoading && (
         <WorkdayTodayCard shift={todayShift} appConfig={data.appConfig} onChanged={() => onRefresh?.()} />
+      )}
+
+      {!isLoading && data.activeShift && (
+        <div className="flex items-start gap-2 px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700">
+          <MapPin size={14} className="flex-shrink-0 mt-0.5" />
+          <p className="text-[11px] font-semibold leading-snug">
+            Location sharing is on while you're checked in: your position is sent every 30 minutes while this app is open. Keep the app open during work. It stops when you check out.
+          </p>
+        </div>
       )}
 
       {!isLoading && (

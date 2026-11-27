@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { hrService } from '../../services/hrService';
 import { Employee, Attendance, LeaveBalance, Holiday, Team, AppConfig, LeaveWorkflow, CustomLeaveType, MileageLog } from '../../types';
 import { DEFAULT_LEAVE_TYPES } from '../../constants';
+import { locationPingService, LocationPing } from '../../services/locationPing.service';
 
 export interface DashboardData {
   freshUser: Employee;
@@ -26,6 +27,8 @@ export interface DashboardData {
   allEmployees: Employee[];
   /** Today's mileage trips org-wide (admin board). Empty for non-admins. */
   todayMileage: MileageLog[];
+  /** Today's 30-minute location pings org-wide, oldest first (admin map). Empty for non-admins. */
+  todayPings: LocationPing[];
 }
 
 export const useDashboard = (user: any) => {
@@ -47,7 +50,11 @@ export const useDashboard = (user: any) => {
         // to filter down to ~today's <N>. Server-side filter is keyed by the
         // `date` column and the 2-min cache key is query-scoped, so this
         // coexists with wider queries from Reports / AttendanceLogs.
-        const [active, balance, emps, leaves, hols, atts, teams, config, wfs, leaveTypes, milTrips] = await Promise.all([
+        // Local midnight, so pings line up with the boss's own "today".
+        const midnight = new Date();
+        midnight.setHours(0, 0, 0, 0);
+
+        const [active, balance, emps, leaves, hols, atts, teams, config, wfs, leaveTypes, milTrips, pings] = await Promise.all([
           hrService.getActiveAttendance(user.id),
           hrService.getLeaveBalance(user.id),
           hrService.getEmployees(),
@@ -59,7 +66,14 @@ export const useDashboard = (user: any) => {
           hrService.getWorkflows(),
           hrService.getLeaveTypes(),
           // Admin board only: today's mileage claims. Skip the query for others.
-          isAdmin ? hrService.listMileage({ since: today, until: today }) : Promise.resolve([] as MileageLog[])
+          isAdmin ? hrService.listMileage({ since: today, until: today }) : Promise.resolve([] as MileageLog[]),
+          // Admin map only: today's position pings. A failure here must not break the board.
+          isAdmin
+            ? locationPingService.listSince(midnight.toISOString()).catch(err => {
+                console.warn('Location pings unavailable', err);
+                return [] as LocationPing[];
+              })
+            : Promise.resolve([] as LocationPing[]),
         ]);
 
         // CRITICAL: Find fresh user record
@@ -132,6 +146,7 @@ export const useDashboard = (user: any) => {
           todayAttendance: isAdmin ? atts.filter(a => a.date === today) : [],
           allEmployees: isAdmin ? emps : [],
           todayMileage: milTrips || [],
+          todayPings: pings || [],
         });
 
       } catch (err) {

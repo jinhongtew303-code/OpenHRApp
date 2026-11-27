@@ -8,6 +8,7 @@ import { useLang } from '../context/LanguageContext';
 import { SubscriptionBanner } from '../components/subscription';
 import ViewAsControls from '../components/viewas/ViewAsControls';
 import { User } from '../types';
+import { useLocationHeartbeat } from '../hooks/attendance/useLocationHeartbeat';
 
 
 interface MainLayoutProps {
@@ -28,6 +29,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, currentPath, onNaviga
   const { darkMode, setDarkModePreference } = useTheme();
   const { t } = useLang();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Staff only: while checked in, share position every 30 min for the boss's map.
+  // Uses the real signed-in user, never a "view as" employee.
+  useLocationHeartbeat(realUser);
 
   const handleNavigate = (path: string) => {
     onNavigate(path);

@@ -15,6 +15,13 @@ export interface ChangelogRelease {
 
 export const changelog: ChangelogRelease[] = [
   {
+    date: '2026-11-27',
+    title: '30-minute location updates on the team map',
+    entries: [
+      { type: 'feature', description: 'Staff location now updates every 30 minutes while checked in: once an employee checks in, the app records their GPS position every 30 minutes (stored in a new location_pings table) until they check out. The boss\'s Team Map pin moves to the latest position with a "Last seen HH:mm" time, tapping it draws the whole day\'s route with a timed dot at each update, and the Google Maps button in "Who\'s in today" opens the latest position. It is a web app, so updates are only sent while the employee\'s app is open; if it was closed, an update is sent as soon as it is reopened. Staff see a green notice on Home while sharing is on. The boss board now refreshes every 10 minutes.' },
+    ],
+  },
+  {
     date: '2026-11-26',
     title: 'Boss dashboard rebuilt, trimmed boss menu, team leave balances',
     entries: [

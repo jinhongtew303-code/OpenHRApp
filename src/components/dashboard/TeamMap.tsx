@@ -22,15 +22,15 @@ interface Props {
 const PALETTE = ['#2563eb', '#059669', '#d97706', '#db2777', '#7c3aed', '#0891b2'];
 
 /**
- * Boss-only team map. Each employee's latest check-in shows as a coloured pin;
- * tapping a pin draws that person's route for today (their check-in points, in
- * order). Free OpenStreetMap tiles — no API key. Location is only captured at
- * check-in, so the map reflects the latest punch, not continuous tracking.
+ * Boss-only team map. Each employee's latest known position (check-in or a
+ * 30-minute ping) shows as a coloured pin; tapping a pin draws that person's
+ * route for today, in order. Free OpenStreetMap tiles — no API key. Pings are
+ * only sent while the employee's app is open, so gaps are possible.
  */
 export const TeamMap: React.FC<Props> = ({ points }) => {
   const elRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const routeRef = useRef<L.Polyline | null>(null);
+  const routeRef = useRef<L.FeatureGroup | null>(null);
 
   useEffect(() => {
     if (!elRef.current || mapRef.current) return;
@@ -59,9 +59,18 @@ export const TeamMap: React.FC<Props> = ({ points }) => {
     const drawRoute = (p: TeamMapPoint, color: string) => {
       if (routeRef.current) { map.removeLayer(routeRef.current); routeRef.current = null; }
       if (p.route.length < 2) return;
-      routeRef.current = L.polyline(p.route.map(r => [r.lat, r.lng]) as [number, number][], {
+      // Dashed line through today's positions, with a small timed dot at each.
+      const group = L.featureGroup();
+      L.polyline(p.route.map(r => [r.lat, r.lng]) as [number, number][], {
         color, weight: 3, opacity: 0.7, dashArray: '6 6',
-      }).addTo(map);
+      }).addTo(group);
+      p.route.slice(0, -1).forEach(r => {
+        L.circleMarker([r.lat, r.lng], { radius: 4, color, weight: 2, fillColor: '#ffffff', fillOpacity: 1 })
+          .bindTooltip(r.time || '', { direction: 'top' })
+          .addTo(group);
+      });
+      group.addTo(map);
+      routeRef.current = group;
     };
 
     const bounds: [number, number][] = [];
@@ -72,7 +81,8 @@ export const TeamMap: React.FC<Props> = ({ points }) => {
       }).addTo(map);
       marker.bindPopup(
         `<div style="font-weight:700">${p.name}</div>` +
-        `<div style="font-size:11px;color:#64748b">${p.working ? 'Working' : 'Checked out'}${p.late ? ' · Late' : ''}${p.time ? ' · ' + p.time : ''}</div>` +
+        `<div style="font-size:11px;color:#64748b">${p.working ? 'Working' : 'Checked out'}${p.late ? ' · Late' : ''}</div>` +
+        (p.time ? `<div style="font-size:11px;color:#64748b">Last seen ${p.time}</div>` : '') +
         (p.route.length > 1 ? `<div style="font-size:11px;color:#2563eb;margin-top:2px">Tap pin for today's route</div>` : '')
       );
       marker.on('click', () => drawRoute(p, color));
